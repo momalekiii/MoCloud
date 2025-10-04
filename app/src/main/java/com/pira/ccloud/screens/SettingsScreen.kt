@@ -1,5 +1,11 @@
 package com.pira.ccloud.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -60,64 +66,116 @@ fun SettingsScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
             .padding(16.dp)
     ) {
         item {
-            Text(
-                text = stringResource(R.string.settings),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(300)) + slideInVertically(animationSpec = tween(300)),
+                exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(animationSpec = tween(300))
+            ) {
+                Text(
+                    text = stringResource(R.string.settings),
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
         }
         
         item {
-            ThemeModeSection(
-                currentThemeMode = themeSettings.themeMode,
-                onThemeModeSelected = { mode ->
-                    val newSettings = themeSettings.copy(themeMode = mode)
-                    updateThemeSettings(newSettings)
-                }
-            )
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(400)) + slideInVertically(animationSpec = tween(400, delayMillis = 100)),
+                exit = fadeOut(animationSpec = tween(400)) + slideOutVertically(animationSpec = tween(400))
+            ) {
+                ThemeModeSection(
+                    currentThemeMode = themeSettings.themeMode,
+                    onThemeModeSelected = { mode ->
+                        val newSettings = themeSettings.copy(themeMode = mode)
+                        updateThemeSettings(newSettings)
+                    }
+                )
+            }
+        }
+        
+        item {
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(500)) + slideInVertically(animationSpec = tween(500, delayMillis = 200)),
+                exit = fadeOut(animationSpec = tween(500)) + slideOutVertically(animationSpec = tween(500))
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+        
+        item {
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(600)) + slideInVertically(animationSpec = tween(600, delayMillis = 300)),
+                exit = fadeOut(animationSpec = tween(600)) + slideOutVertically(animationSpec = tween(600))
+            ) {
+                ColorSelectionSection(
+                    title = "Primary Color",
+                    selectedColor = themeSettings.primaryColor,
+                    onColorSelected = { color ->
+                        val newSettings = themeSettings.copy(primaryColor = color)
+                        updateThemeSettings(newSettings)
+                    }
+                )
+            }
+        }
+        
+        item {
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(700)) + slideInVertically(animationSpec = tween(700, delayMillis = 400)),
+                exit = fadeOut(animationSpec = tween(700)) + slideOutVertically(animationSpec = tween(700))
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+        
+        item {
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(800)) + slideInVertically(animationSpec = tween(800, delayMillis = 500)),
+                exit = fadeOut(animationSpec = tween(800)) + slideOutVertically(animationSpec = tween(800))
+            ) {
+                ColorSelectionSection(
+                    title = "Secondary Color",
+                    selectedColor = themeSettings.secondaryColor,
+                    onColorSelected = { color ->
+                        val newSettings = themeSettings.copy(secondaryColor = color)
+                        updateThemeSettings(newSettings)
+                    }
+                )
+            }
+        }
+        
+        item {
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(900)) + slideInVertically(animationSpec = tween(900, delayMillis = 600)),
+                exit = fadeOut(animationSpec = tween(900)) + slideOutVertically(animationSpec = tween(900))
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+        
+        item {
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(1000)) + slideInVertically(animationSpec = tween(1000, delayMillis = 700)),
+                exit = fadeOut(animationSpec = tween(1000)) + slideOutVertically(animationSpec = tween(1000))
+            ) {
+                ResetToDefaultsButton(
+                    onClick = {
+                        val defaultSettings = ThemeSettings()
+                        updateThemeSettings(defaultSettings)
+                    }
+                )
+            }
         }
         
         item {
             Spacer(modifier = Modifier.height(24.dp))
-        }
-        
-        item {
-            ColorSelectionSection(
-                title = "Primary Color",
-                selectedColor = themeSettings.primaryColor,
-                onColorSelected = { color ->
-                    val newSettings = themeSettings.copy(primaryColor = color)
-                    updateThemeSettings(newSettings)
-                }
-            )
-        }
-        
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-        
-        item {
-            ColorSelectionSection(
-                title = "Secondary Color",
-                selectedColor = themeSettings.secondaryColor,
-                onColorSelected = { color ->
-                    val newSettings = themeSettings.copy(secondaryColor = color)
-                    updateThemeSettings(newSettings)
-                }
-            )
-        }
-        
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-        
-        item {
-            ResetToDefaultsButton(
-                onClick = {
-                    val defaultSettings = ThemeSettings()
-                    updateThemeSettings(defaultSettings)
-                }
-            )
         }
     }
 }
