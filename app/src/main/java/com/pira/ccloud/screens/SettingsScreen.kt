@@ -41,23 +41,45 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.pira.ccloud.R
+import com.pira.ccloud.data.model.SubtitleSettings
 import com.pira.ccloud.ui.theme.ThemeMode
 import com.pira.ccloud.ui.theme.ThemeSettings
 import com.pira.ccloud.ui.theme.ThemeManager
 import com.pira.ccloud.ui.theme.colorOptions
 import com.pira.ccloud.ui.theme.defaultPrimaryColor
 import com.pira.ccloud.ui.theme.defaultSecondaryColor
+import com.pira.ccloud.utils.StorageUtils
+import androidx.compose.foundation.layout.Arrangement.SpaceBetween
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Brightness1
+import androidx.compose.material.icons.filled.FormatColorFill
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Slider
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun SettingsScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
     val themeManager = ThemeManager(androidx.compose.ui.platform.LocalContext.current)
     var themeSettings by remember { mutableStateOf(themeManager.loadThemeSettings()) }
+    val context = LocalContext.current
+    var subtitleSettings by remember { mutableStateOf(StorageUtils.loadSubtitleSettings(context)) }
     
     // Update parent when settings change
     fun updateThemeSettings(newSettings: ThemeSettings) {
         themeSettings = newSettings
         onThemeSettingsChanged(newSettings)
         themeManager.saveThemeSettings(newSettings)
+    }
+    
+    // Update subtitle settings
+    fun updateSubtitleSettings(newSettings: SubtitleSettings) {
+        subtitleSettings = newSettings
+        StorageUtils.saveSubtitleSettings(context, newSettings)
     }
     
     LazyColumn(
@@ -164,6 +186,29 @@ fun SettingsScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
                 visible = true,
                 enter = fadeIn(animationSpec = tween(1000)) + slideInVertically(animationSpec = tween(1000, delayMillis = 700)),
                 exit = fadeOut(animationSpec = tween(1000)) + slideOutVertically(animationSpec = tween(1000))
+            ) {
+                SubtitleSettingsSection(
+                    subtitleSettings = subtitleSettings,
+                    onSettingsChanged = { updateSubtitleSettings(it) }
+                )
+            }
+        }
+        
+        item {
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(1100)) + slideInVertically(animationSpec = tween(1100, delayMillis = 800)),
+                exit = fadeOut(animationSpec = tween(1100)) + slideOutVertically(animationSpec = tween(1100))
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+        
+        item {
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(1200)) + slideInVertically(animationSpec = tween(1200, delayMillis = 900)),
+                exit = fadeOut(animationSpec = tween(1200)) + slideOutVertically(animationSpec = tween(1200))
             ) {
                 ResetToDefaultsButton(
                     onClick = {
@@ -370,6 +415,194 @@ fun ResetToDefaultsButton(onClick: () -> Unit) {
                 text = "Reset to Defaults",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
+fun SubtitleSettingsSection(
+    subtitleSettings: SubtitleSettings,
+    onSettingsChanged: (SubtitleSettings) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Subtitle Settings",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            
+            // Background color setting
+            SubtitleColorSetting(
+                title = "Background Color",
+                currentColor = Color(subtitleSettings.backgroundColor),
+                onColorSelected = { color ->
+                    onSettingsChanged(subtitleSettings.copy(backgroundColor = color.toArgb()))
+                },
+                noColorOption = true
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Text color setting
+            SubtitleColorSetting(
+                title = "Text Color",
+                currentColor = Color(subtitleSettings.textColor),
+                onColorSelected = { color ->
+                    onSettingsChanged(subtitleSettings.copy(textColor = color.toArgb()))
+                },
+                defaultColor = Color.Yellow
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Border color setting
+            SubtitleColorSetting(
+                title = "Border Color",
+                currentColor = Color(subtitleSettings.borderColor),
+                onColorSelected = { color ->
+                    onSettingsChanged(subtitleSettings.copy(borderColor = color.toArgb()))
+                },
+                noColorOption = true
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Text size setting
+            Text(
+                text = "Text Size: ${subtitleSettings.textSize.toInt()}sp",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            
+            Slider(
+                value = subtitleSettings.textSize,
+                onValueChange = { size ->
+                    onSettingsChanged(subtitleSettings.copy(textSize = size))
+                },
+                valueRange = 10f..30f,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+fun SubtitleColorSetting(
+    title: String,
+    currentColor: Color,
+    onColorSelected: (Color) -> Unit,
+    noColorOption: Boolean = false,
+    defaultColor: Color? = null
+) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Color options
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // No color option (transparent)
+                if (noColorOption) {
+                    ColorOptionButton(
+                        color = Color.Transparent,
+                        isSelected = currentColor == Color.Transparent,
+                        onClick = { onColorSelected(Color.Transparent) },
+                        showBorder = true
+                    )
+                }
+                
+                // Default color option
+                if (defaultColor != null) {
+                    ColorOptionButton(
+                        color = defaultColor,
+                        isSelected = currentColor == defaultColor,
+                        onClick = { onColorSelected(defaultColor) }
+                    )
+                }
+                
+                // Standard color options
+                listOf(Color.White, Color.Black, Color.Red, Color.Blue, Color.Green).forEach { color ->
+                    ColorOptionButton(
+                        color = color,
+                        isSelected = currentColor == color,
+                        onClick = { onColorSelected(color) }
+                    )
+                }
+            }
+            
+            // Current color preview
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(currentColor)
+                    .then(
+                        if (currentColor == Color.Transparent) {
+                            Modifier.background(Color.Gray.copy(alpha = 0.3f))
+                        } else {
+                            Modifier
+                        }
+                    )
+            )
+        }
+    }
+}
+
+@Composable
+fun ColorOptionButton(
+    color: Color,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    showBorder: Boolean = false
+) {
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(
+                if (color == Color.Transparent && showBorder) {
+                    color
+                } else {
+                    color
+                }
+            )
+            .then(
+                if (isSelected) {
+                    Modifier.background(
+                        color = color,
+                        shape = RoundedCornerShape(4.dp)
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Selected",
+                tint = if (color == Color.White || color == Color.Yellow) Color.Black else Color.White,
+                modifier = Modifier.size(16.dp)
+            )
+        } else if (color == Color.Transparent && showBorder) {
+            Icon(
+                imageVector = Icons.Default.Brightness1,
+                contentDescription = "No color",
+                tint = Color.White.copy(alpha = 0.5f),
+                modifier = Modifier.size(16.dp)
             )
         }
     }

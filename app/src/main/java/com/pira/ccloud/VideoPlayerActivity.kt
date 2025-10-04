@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
@@ -47,7 +48,34 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
+import com.pira.ccloud.data.model.SubtitleSettings
+import com.pira.ccloud.utils.StorageUtils
+
+// Extension function to set subtitle text size on PlayerView
+fun PlayerView.setSubtitleTextSize(spSize: Float) {
+    // Convert sp to pixels
+    val displayMetrics = context.resources.displayMetrics
+    val pixels = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, spSize, displayMetrics)
+    
+    // Set the subtitle text size
+    subtitleView?.setFixedTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, pixels)
+}
+
+// Extension function to set subtitle colors
+fun PlayerView.setSubtitleColors(settings: SubtitleSettings) {
+    subtitleView?.setStyle(
+        CaptionStyleCompat(
+            settings.textColor,
+            settings.backgroundColor,
+            settings.borderColor,
+            CaptionStyleCompat.EDGE_TYPE_OUTLINE,
+            settings.borderColor,
+            null // typeface
+        )
+    )
+}
 
 class VideoPlayerActivity : ComponentActivity() {
     companion object {
@@ -102,6 +130,11 @@ fun VideoPlayerScreen(
     var duration by remember { mutableStateOf(0L) }
     var showControls by remember { mutableStateOf(true) }
     var isSubtitlesEnabled by remember { mutableStateOf(true) }
+    
+    // Load subtitle settings
+    val subtitleSettings = remember(context) {
+        StorageUtils.loadSubtitleSettings(context)
+    }
     
     val exoPlayer = remember(context) {
         ExoPlayer.Builder(context).build().apply {
@@ -171,9 +204,24 @@ fun VideoPlayerScreen(
                     )
                     // Make the player view fill the entire screen
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    
+                    // Apply subtitle settings to the player view
+                    if (isSubtitlesEnabled) {
+                        // Set subtitle styling
+                        setSubtitleTextSize(subtitleSettings.textSize)
+                        setSubtitleColors(subtitleSettings)
+                    }
                 }
             },
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            update = { playerView ->
+                // Update the player view when subtitle settings change
+                if (isSubtitlesEnabled) {
+                    // Update subtitle styling when settings change
+                    playerView.setSubtitleTextSize(subtitleSettings.textSize)
+                    playerView.setSubtitleColors(subtitleSettings)
+                }
+            }
         )
         
         // Custom controls overlay

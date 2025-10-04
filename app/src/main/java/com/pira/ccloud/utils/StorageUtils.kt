@@ -3,6 +3,7 @@ package com.pira.ccloud.utils
 import android.content.Context
 import android.util.Log
 import com.pira.ccloud.data.model.Movie
+import com.pira.ccloud.data.model.SubtitleSettings
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -57,6 +58,33 @@ object StorageUtils {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing all movies", e)
+        }
+    }
+    
+    // Subtitle settings functions
+    fun saveSubtitleSettings(context: Context, settings: SubtitleSettings) {
+        try {
+            val jsonString = Json.encodeToString(settings)
+            val file = File(context.filesDir, "subtitle_settings.json")
+            file.writeText(jsonString)
+            Log.d(TAG, "Subtitle settings saved to file")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving subtitle settings to file", e)
+        }
+    }
+    
+    fun loadSubtitleSettings(context: Context): SubtitleSettings {
+        return try {
+            val file = File(context.filesDir, "subtitle_settings.json")
+            if (file.exists()) {
+                val jsonString = file.readText()
+                Json.decodeFromString<SubtitleSettings>(jsonString)
+            } else {
+                SubtitleSettings.DEFAULT
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading subtitle settings from file", e)
+            SubtitleSettings.DEFAULT
         }
     }
 }
