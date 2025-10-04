@@ -11,11 +11,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +30,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -103,19 +106,19 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
                 },
                 label = "topBar"
             ) { screen ->
-                TopAppBar(
+                CenterAlignedTopAppBar(
                     title = {
                         Text(
                             text = stringResource(screen.resourceId),
                             fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxSize()
+                            textAlign = TextAlign.Center
                         )
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
                         titleContentColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                    )
+                    ),
+                    modifier = Modifier.height(48.dp) // Reduced height for less spacing
                 )
             }
         },
