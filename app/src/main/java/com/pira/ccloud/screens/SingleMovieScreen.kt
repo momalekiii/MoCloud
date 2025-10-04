@@ -22,8 +22,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,6 +35,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -54,7 +57,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.pira.ccloud.VideoPlayerActivity
 import com.pira.ccloud.data.model.Movie
+import com.pira.ccloud.data.model.Source
 import com.pira.ccloud.utils.StorageUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,6 +81,10 @@ fun SingleMovieScreen(
             MovieDetailsContent(
                 movie = movie!!,
                 onBackClick = { navController.popBackStack() },
+                onPlayClick = { source ->
+                    // Launch video player activity
+                    VideoPlayerActivity.start(context, source.url)
+                },
                 modifier = Modifier.padding(innerPadding)
             )
         } else {
@@ -111,10 +120,29 @@ fun SingleMovieScreen(
 fun MovieDetailsContent(
     movie: Movie,
     onBackClick: () -> Unit,
+    onPlayClick: (Source) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val layoutDirection = LocalLayoutDirection.current
+    var selectedSource by remember { mutableStateOf<Source?>(null) }
+    var showSourceDialog by remember { mutableStateOf(false) }
+    
+    // Source selection dialog
+    if (showSourceDialog && selectedSource != null) {
+        SourceOptionsDialog(
+            source = selectedSource!!,
+            onDismiss = { showSourceDialog = false },
+            onDownload = { source ->
+                showSourceDialog = false
+                openUrl(context, source.url)
+            },
+            onPlay = { source ->
+                showSourceDialog = false
+                onPlayClick(source)
+            }
+        )
+    }
     
     Column(
         modifier = modifier
@@ -312,7 +340,8 @@ fun MovieDetailsContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                openUrl(context, source.url)
+                                selectedSource = source
+                                showSourceDialog = true
                             },
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -346,6 +375,84 @@ fun MovieDetailsContent(
         
         Spacer(modifier = Modifier.height(16.dp))
     }
+}
+
+@Composable
+fun SourceOptionsDialog(
+    source: Source,
+    onDismiss: () -> Unit,
+    onDownload: (Source) -> Unit,
+    onPlay: (Source) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = source.quality,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(
+                text = "Choose an action for this video quality",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        confirmButton = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = { onDownload(source) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = androidx.compose.material3.ButtonDefaults.elevatedButtonElevation()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = "Download",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Download in Browser")
+                }
+                
+                Button(
+                    onClick = { onPlay(source) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    elevation = androidx.compose.material3.ButtonDefaults.elevatedButtonElevation()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Play",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Play in App")
+                }
+                
+                // Cancel button moved to the bottom of the dialog
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("Cancel")
+                }
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(20.dp),
+        tonalElevation = 6.dp
+    )
 }
 
 fun openUrl(context: Context, url: String) {

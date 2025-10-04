@@ -1,5 +1,6 @@
 package com.pira.ccloud
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -46,6 +47,8 @@ import com.pira.ccloud.ui.theme.ThemeSettings
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Set default orientation to portrait
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         enableEdgeToEdge()
         setContent {
             MainApp()
@@ -102,28 +105,31 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            AnimatedContent(
-                targetState = currentScreen,
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(220, delayMillis = 90)) togetherWith
-                    fadeOut(animationSpec = tween(90))
-                },
-                label = "topBar"
-            ) { screen ->
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            text = stringResource(screen.resourceId),
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
+            // Only show top bar if the current screen requires it
+            if (currentScreen.showBottomBar) {
+                AnimatedContent(
+                    targetState = currentScreen,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(220, delayMillis = 90)) togetherWith
+                        fadeOut(animationSpec = tween(90))
                     },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
-                        titleContentColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                    ),
-                    modifier = Modifier.height(48.dp) // Reduced height for less spacing
-                )
+                    label = "topBar"
+                ) { screen ->
+                    CenterAlignedTopAppBar(
+                        title = {
+                            Text(
+                                text = stringResource(screen.resourceId),
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                        },
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
+                            titleContentColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                        ),
+                        modifier = Modifier.height(48.dp) // Reduced height for less spacing
+                    )
+                }
             }
         },
         bottomBar = {
