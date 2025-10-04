@@ -1,0 +1,115 @@
+package com.pira.ccloud
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.pira.ccloud.navigation.AppNavigation
+import com.pira.ccloud.navigation.AppScreens
+import com.pira.ccloud.navigation.BottomNavigationBar
+import com.pira.ccloud.ui.theme.CCloudTheme
+import com.pira.ccloud.ui.theme.ThemeManager
+import com.pira.ccloud.ui.theme.ThemeSettings
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            MainApp()
+        }
+    }
+}
+
+@Composable
+fun MainApp() {
+    val themeManager = ThemeManager(androidx.compose.ui.platform.LocalContext.current)
+    var themeSettings by remember { mutableStateOf(themeManager.loadThemeSettings()) }
+    
+    // Save theme settings when they change
+    LaunchedEffect(themeSettings) {
+        themeManager.saveThemeSettings(themeSettings)
+    }
+    
+    CCloudTheme(themeSettings) {
+        MainScreen(onThemeSettingsChanged = { themeSettings = it })
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
+    val navController = rememberNavController()
+    val themeManager = ThemeManager(androidx.compose.ui.platform.LocalContext.current)
+    val themeSettings = themeManager.loadThemeSettings()
+    
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+    
+    val currentScreen = AppScreens.screens.find { it.route == currentRoute } ?: AppScreens.Movies
+    
+    // System UI controller for edge-to-edge support
+    val systemUiController = rememberSystemUiController()
+    val useDarkIcons = themeSettings.themeMode != com.pira.ccloud.ui.theme.ThemeMode.DARK
+    
+    LaunchedEffect(themeSettings) {
+        systemUiController.setStatusBarColor(
+            color = androidx.compose.ui.graphics.Color.Transparent,
+            darkIcons = useDarkIcons
+        )
+        systemUiController.setNavigationBarColor(
+            color = androidx.compose.ui.graphics.Color.Transparent,
+            darkIcons = useDarkIcons
+        )
+    }
+    
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(stringResource(currentScreen.resourceId))
+                }
+            )
+        },
+        bottomBar = {
+            BottomNavigationBar(navController)
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            // Pass theme settings callback to navigation
+            AppNavigation(navController, onThemeSettingsChanged)
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainScreenPreview() {
+    val themeManager = ThemeManager(androidx.compose.ui.platform.LocalContext.current)
+    val themeSettings = themeManager.loadThemeSettings()
+    
+    CCloudTheme(themeSettings) {
+        MainScreen()
+    }
+}

@@ -1,0 +1,44 @@
+package com.pira.ccloud.navigation
+
+import androidx.annotation.StringRes
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tv
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.pira.ccloud.R
+
+sealed class AppScreens(
+    val route: String,
+    @StringRes val resourceId: Int,
+    val icon: ImageVector
+) {
+    data object Movies : AppScreens(
+        route = "movies",
+        resourceId = R.string.movies,
+        icon = Icons.Default.Movie
+    )
+
+    data object Series : AppScreens(
+        route = "series",
+        resourceId = R.string.series,
+        icon = Icons.Default.Tv
+    )
+
+    data object Search : AppScreens(
+        route = "search",
+        resourceId = R.string.search,
+        icon = Icons.Default.Search
+    )
+
+    data object Settings : AppScreens(
+        route = "settings",
+        resourceId = R.string.settings,
+        icon = Icons.Default.Settings
+    )
+
+    companion object {
+        val screens = listOf(Movies, Series, Search, Settings)
+    }
+}
