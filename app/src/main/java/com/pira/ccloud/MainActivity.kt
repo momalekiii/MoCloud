@@ -78,7 +78,11 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
     
-    val currentScreen = AppScreens.screens.find { it.route == currentRoute } ?: AppScreens.Movies
+    // Find the current screen, including the SingleMovie screen
+    val currentScreen = when {
+        currentRoute?.startsWith("single_movie") == true -> AppScreens.SingleMovie
+        else -> AppScreens.screens.find { it.route == currentRoute } ?: AppScreens.Movies
+    }
     
     // System UI controller for edge-to-edge support
     val systemUiController = rememberSystemUiController()
@@ -123,7 +127,10 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
             }
         },
         bottomBar = {
-            BottomNavigationBar(navController)
+            // Only show bottom bar if the current screen requires it
+            if (currentScreen.showBottomBar) {
+                BottomNavigationBar(navController)
+            }
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {

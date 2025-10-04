@@ -12,7 +12,8 @@ import com.pira.ccloud.R
 sealed class AppScreens(
     val route: String,
     @StringRes val resourceId: Int,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val showBottomBar: Boolean = true
 ) {
     data object Movies : AppScreens(
         route = "movies",
@@ -36,6 +37,13 @@ sealed class AppScreens(
         route = "settings",
         resourceId = R.string.settings,
         icon = Icons.Default.Settings
+    )
+
+    data object SingleMovie : AppScreens(
+        route = "single_movie/{movieId}",
+        resourceId = R.string.movie_details,
+        icon = Icons.Default.Movie,
+        showBottomBar = false
     )
 
     companion object {

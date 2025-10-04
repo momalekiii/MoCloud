@@ -60,14 +60,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.pira.ccloud.data.model.Movie
 import com.pira.ccloud.ui.movies.MoviesViewModel
+import com.pira.ccloud.utils.StorageUtils
 
 @Composable
 fun MoviesScreen(
-    viewModel: MoviesViewModel = viewModel()
+    viewModel: MoviesViewModel = viewModel(),
+    navController: NavController? = null
 ) {
     val movies = viewModel.movies
     val isLoading = viewModel.isLoading
@@ -100,7 +104,8 @@ fun MoviesScreen(
                     errorMessage = errorMessage,
                     onRetry = { viewModel.retry() },
                     onRefresh = { viewModel.refresh() },
-                    onLoadMore = { viewModel.loadMoreMovies() }
+                    onLoadMore = { viewModel.loadMoreMovies() },
+                    navController = navController
                 )
             }
         }
@@ -257,9 +262,11 @@ fun MovieGrid(
     errorMessage: String?,
     onRetry: () -> Unit,
     onRefresh: () -> Unit,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
+    navController: NavController? = null
 ) {
     val moviesList = movies.toList()
+    val context = LocalContext.current
     
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -269,7 +276,15 @@ fun MovieGrid(
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
     ) {
         itemsIndexed(moviesList) { index, movie ->
-            MovieItem(movie = movie)
+            MovieItem(
+                movie = movie,
+                onClick = {
+                    // Save movie to storage
+                    StorageUtils.saveMovieToFile(context, movie)
+                    // Navigate to single movie screen
+                    navController?.navigate("single_movie/${movie.id}")
+                }
+            )
             
             // Load more when we're near the end of the list
             if (index >= moviesList.size - 3) {
@@ -347,11 +362,14 @@ fun ModernCircularProgressIndicator() {
 }
 
 @Composable
-fun MovieItem(movie: Movie) {
+fun MovieItem(
+    movie: Movie,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Handle movie click */ },
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(

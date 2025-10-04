@@ -1,5 +1,8 @@
 package com.pira.ccloud.data.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Movie(
     val id: Int,
     val type: String,
@@ -16,11 +19,13 @@ data class Movie(
     val country: List<Country>
 )
 
+@Serializable
 data class Genre(
     val id: Int,
     val title: String
 )
 
+@Serializable
 data class Source(
     val id: Int,
     val quality: String,
@@ -28,6 +33,7 @@ data class Source(
     val url: String
 )
 
+@Serializable
 data class Country(
     val id: Int,
     val title: String,

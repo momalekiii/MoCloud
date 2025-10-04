@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -54,6 +55,9 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.coil.compose)
+    
+    // Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     
     // Networking
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
