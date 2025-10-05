@@ -60,8 +60,10 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.pira.ccloud.VideoPlayerActivity
+import com.pira.ccloud.components.DownloadOptionsDialog
 import com.pira.ccloud.data.model.Movie
 import com.pira.ccloud.data.model.Source
+import com.pira.ccloud.utils.DownloadUtils
 import com.pira.ccloud.utils.StorageUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -390,6 +392,20 @@ fun SourceOptionsDialog(
     onDownload: (Source) -> Unit,
     onPlay: (Source) -> Unit
 ) {
+    val context = LocalContext.current
+    var showDownloadOptions by remember { mutableStateOf(false) }
+    
+    if (showDownloadOptions) {
+        DownloadOptionsDialog(
+            source = source,
+            onDismiss = { showDownloadOptions = false },
+            onCopyLink = { DownloadUtils.copyToClipboard(context, source.url) },
+            onDownloadWithBrowser = { DownloadUtils.openUrl(context, source.url) },
+            onDownloadWithADM = { DownloadUtils.openWithADM(context, source.url) },
+            onOpenInVLC = { DownloadUtils.openWithVLC(context, source.url) }
+        )
+    }
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -412,7 +428,7 @@ fun SourceOptionsDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = { onDownload(source) },
+                    onClick = { showDownloadOptions = true },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     elevation = androidx.compose.material3.ButtonDefaults.elevatedButtonElevation()
@@ -423,7 +439,7 @@ fun SourceOptionsDialog(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Download in Browser")
+                    Text("Download Options")
                 }
                 
                 Button(
@@ -461,11 +477,8 @@ fun SourceOptionsDialog(
     )
 }
 
+
 fun openUrl(context: Context, url: String) {
-    try {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        context.startActivity(intent)
-    } catch (e: Exception) {
-        // Handle error or show a message
-    }
+    DownloadUtils.openUrl(context, url)
 }
+

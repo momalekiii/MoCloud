@@ -104,6 +104,9 @@ class VideoPlayerActivity : ComponentActivity() {
         // Enable immersive full-screen mode
         enableFullScreenMode()
         
+        // Keep screen on while in video player
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        
         videoUrl = intent.getStringExtra(EXTRA_VIDEO_URL)
         
         if (videoUrl != null) {
@@ -152,6 +155,9 @@ class VideoPlayerActivity : ComponentActivity() {
             // Ignore any exceptions during release
         }
         exoPlayer = null
+        
+        // Remove keep screen on flag to conserve battery
+        window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
     
     override fun onResume() {

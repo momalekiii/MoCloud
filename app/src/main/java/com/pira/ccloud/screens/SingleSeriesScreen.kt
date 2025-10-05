@@ -61,10 +61,12 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.pira.ccloud.VideoPlayerActivity
+import com.pira.ccloud.components.DownloadOptionsDialog
 import com.pira.ccloud.data.model.Episode
 import com.pira.ccloud.data.model.Series
 import com.pira.ccloud.data.model.Source
 import com.pira.ccloud.ui.series.SeasonsViewModel
+import com.pira.ccloud.utils.DownloadUtils
 import com.pira.ccloud.utils.StorageUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -181,6 +183,21 @@ fun SourceOptionsDialog(
     onDownload: (Source) -> Unit,
     onPlay: (Source) -> Unit
 ) {
+    val context = LocalContext.current
+    var selectedSource by remember { mutableStateOf<Source?>(null) }
+    var showDownloadOptions by remember { mutableStateOf(false) }
+    
+    if (showDownloadOptions && selectedSource != null) {
+        DownloadOptionsDialog(
+            source = selectedSource!!,
+            onDismiss = { showDownloadOptions = false },
+            onCopyLink = { DownloadUtils.copyToClipboard(context, selectedSource!!.url) },
+            onDownloadWithBrowser = { DownloadUtils.openUrl(context, selectedSource!!.url) },
+            onDownloadWithADM = { DownloadUtils.openWithADM(context, selectedSource!!.url) },
+            onOpenInVLC = { DownloadUtils.openWithVLC(context, selectedSource!!.url) }
+        )
+    }
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -202,6 +219,28 @@ fun SourceOptionsDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Download options button
+                Button(
+                    onClick = { 
+                        if (episode.sources.size == 1) {
+                            selectedSource = episode.sources[0]
+                            showDownloadOptions = true
+                        }
+                    },
+                    enabled = episode.sources.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = androidx.compose.material3.ButtonDefaults.elevatedButtonElevation()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = "Download",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Download Options")
+                }
+                
                 // Play buttons for each source/quality
                 episode.sources.forEach { source ->
                     Button(
@@ -242,6 +281,21 @@ fun DownloadMenu(
     onDismiss: () -> Unit,
     onDownload: (Source) -> Unit
 ) {
+    val context = LocalContext.current
+    var selectedSource by remember { mutableStateOf<Source?>(null) }
+    var showDownloadOptions by remember { mutableStateOf(false) }
+    
+    if (showDownloadOptions && selectedSource != null) {
+        DownloadOptionsDialog(
+            source = selectedSource!!,
+            onDismiss = { showDownloadOptions = false },
+            onCopyLink = { DownloadUtils.copyToClipboard(context, selectedSource!!.url) },
+            onDownloadWithBrowser = { DownloadUtils.openUrl(context, selectedSource!!.url) },
+            onDownloadWithADM = { DownloadUtils.openWithADM(context, selectedSource!!.url) },
+            onOpenInVLC = { DownloadUtils.openWithVLC(context, selectedSource!!.url) }
+        )
+    }
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -265,7 +319,10 @@ fun DownloadMenu(
             ) {
                 sources.forEach { source ->
                     Button(
-                        onClick = { onDownload(source) },
+                        onClick = { 
+                            selectedSource = source
+                            showDownloadOptions = true
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         colors = androidx.compose.material3.ButtonDefaults.buttonColors(
@@ -299,6 +356,7 @@ fun DownloadMenu(
         tonalElevation = 6.dp
     )
 }
+
 
 @Composable
 fun SeriesDetailsContent(
@@ -744,10 +802,6 @@ fun EpisodeItem(
 }
 
 fun openUrlSeries(context: Context, url: String) {
-    try {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        context.startActivity(intent)
-    } catch (e: Exception) {
-        // Handle error or show a message
-    }
+    DownloadUtils.openUrl(context, url)
 }
+
