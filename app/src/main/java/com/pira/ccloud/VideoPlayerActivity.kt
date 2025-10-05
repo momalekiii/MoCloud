@@ -6,7 +6,10 @@ import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
 import android.util.TypedValue
+import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,7 +28,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +54,7 @@ import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import com.pira.ccloud.data.model.SubtitleSettings
 import com.pira.ccloud.utils.StorageUtils
+import kotlinx.coroutines.delay
 
 // Extension function to set subtitle text size on PlayerView
 fun PlayerView.setSubtitleTextSize(spSize: Float) {
@@ -98,6 +101,9 @@ class VideoPlayerActivity : ComponentActivity() {
         // Set fullscreen landscape mode
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         
+        // Enable immersive full-screen mode
+        enableFullScreenMode()
+        
         videoUrl = intent.getStringExtra(EXTRA_VIDEO_URL)
         
         if (videoUrl != null) {
@@ -111,10 +117,51 @@ class VideoPlayerActivity : ComponentActivity() {
         }
     }
     
+    private fun enableFullScreenMode() {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                // For Android 11 and above
+                window.insetsController?.let { controller ->
+                    controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                    controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                }
+            } else {
+                // For older Android versions
+                @Suppress("DEPRECATION")
+                window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                )
+            }
+        } catch (e: Exception) {
+            // Fallback to basic fullscreen if there's an issue
+            @Suppress("DEPRECATION")
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        }
+    }
+    
     override fun onDestroy() {
         super.onDestroy()
-        exoPlayer?.release()
+        try {
+            exoPlayer?.release()
+        } catch (e: Exception) {
+            // Ignore any exceptions during release
+        }
         exoPlayer = null
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Re-enable full-screen mode when resuming
+        try {
+            enableFullScreenMode()
+        } catch (e: Exception) {
+            // Ignore fullscreen errors
+        }
     }
 }
 
@@ -129,7 +176,8 @@ fun VideoPlayerScreen(
     var currentPosition by remember { mutableStateOf(0L) }
     var duration by remember { mutableStateOf(0L) }
     var showControls by remember { mutableStateOf(true) }
-    var isSubtitlesEnabled by remember { mutableStateOf(true) }
+    var isSeeking by remember { mutableStateOf(false) }
+    var playerError by remember { mutableStateOf<String?>(null) }
     
     // Load subtitle settings
     val subtitleSettings = remember(context) {
@@ -137,33 +185,50 @@ fun VideoPlayerScreen(
     }
     
     val exoPlayer = remember(context) {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(Uri.parse(videoUrl)))
-            prepare()
-            playWhenReady = isPlaying
+        try {
+            ExoPlayer.Builder(context).build().apply {
+                setMediaItem(MediaItem.fromUri(Uri.parse(videoUrl)))
+                prepare()
+                playWhenReady = isPlaying
+            }
+        } catch (e: Exception) {
+            playerError = "Failed to initialize player: ${e.message}"
+            null
         }
     }
     
     // Notify activity of player reference
     LaunchedEffect(Unit) {
-        onPlayerReady(exoPlayer)
+        try {
+            exoPlayer?.let { onPlayerReady(it) }
+        } catch (e: Exception) {
+            // Ignore callback errors
+        }
     }
     
     // Update player state
-    LaunchedEffect(isPlaying) {
-        exoPlayer.playWhenReady = isPlaying
+    LaunchedEffect(isPlaying, exoPlayer) {
+        try {
+            exoPlayer?.playWhenReady = isPlaying
+        } catch (e: Exception) {
+            // Ignore player state errors
+        }
     }
     
-    // Listen to player events
-    LaunchedEffect(exoPlayer) {
-        val listener = object : Player.Listener {
+    // Listen to player events and handle cleanup
+    val playerListener = remember(exoPlayer) {
+        object : Player.Listener {
             override fun onIsPlayingChanged(playing: Boolean) {
                 isPlaying = playing
             }
             
             override fun onPlaybackStateChanged(playbackState: Int) {
-                if (playbackState == Player.STATE_READY) {
-                    duration = exoPlayer.duration
+                try {
+                    if (playbackState == Player.STATE_READY) {
+                        duration = exoPlayer?.duration ?: 0L
+                    }
+                } catch (e: Exception) {
+                    // Ignore duration errors
                 }
             }
             
@@ -172,17 +237,78 @@ fun VideoPlayerScreen(
                 newPosition: Player.PositionInfo,
                 reason: Int
             ) {
-                currentPosition = exoPlayer.currentPosition
+                try {
+                    if (!isSeeking) {
+                        currentPosition = exoPlayer?.currentPosition ?: 0L
+                    }
+                } catch (e: Exception) {
+                    // Ignore position errors
+                }
+            }
+            
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                playerError = error.message
             }
         }
+    }
+    
+    LaunchedEffect(exoPlayer) {
+        if (exoPlayer == null) return@LaunchedEffect
         
-        exoPlayer.addListener(listener)
+        exoPlayer.addListener(playerListener)
+    }
+    
+    DisposableEffect(exoPlayer) {
+        onDispose {
+            exoPlayer?.removeListener(playerListener)
+        }
+    }
+    
+    // Periodically update the current position for real-time progress tracking
+    LaunchedEffect(exoPlayer, isPlaying) {
+        if (exoPlayer == null) return@LaunchedEffect
+        
+        try {
+            while (true) {
+                delay(100) // Update every 100ms for smooth progress tracking
+                if (isPlaying && !isSeeking) {
+                    try {
+                        exoPlayer?.let { player ->
+                            if (player.isPlaying) {
+                                currentPosition = player.currentPosition
+                                duration = player.duration
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // Ignore position/duration errors
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // Ignore coroutine errors
+        }
+    }
+    
+    // Hide controls after a delay
+    LaunchedEffect(showControls, isPlaying) {
+        try {
+            if (showControls && isPlaying) {
+                delay(3000) // Hide controls after 3 seconds
+                showControls = false
+            }
+        } catch (e: Exception) {
+            // Ignore delay errors
+        }
     }
     
     // Clean up player
     DisposableEffect(exoPlayer) {
         onDispose {
-            exoPlayer.release()
+            try {
+                exoPlayer?.release()
+            } catch (e: Exception) {
+                // Ignore release errors
+            }
         }
     }
     
@@ -190,8 +316,44 @@ fun VideoPlayerScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .clickable { showControls = !showControls }
+            .clickable { 
+                showControls = !showControls
+                // Reset the auto-hide timer when controls are shown
+                if (showControls && isPlaying) {
+                    // The LaunchedEffect above will handle the auto-hide
+                }
+            }
     ) {
+        // Show error message if player failed to initialize
+        if (playerError != null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = playerError ?: "Unknown error occurred",
+                    color = Color.Red,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+            return@Box
+        }
+        
+        // Check if player is initialized
+        if (exoPlayer == null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Initializing player...",
+                    color = Color.White,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+            return@Box
+        }
+        
         // Video player
         AndroidView(
             factory = { ctx ->
@@ -206,21 +368,17 @@ fun VideoPlayerScreen(
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                     
                     // Apply subtitle settings to the player view
-                    if (isSubtitlesEnabled) {
-                        // Set subtitle styling
-                        setSubtitleTextSize(subtitleSettings.textSize)
-                        setSubtitleColors(subtitleSettings)
-                    }
+                    // Set subtitle styling
+                    setSubtitleTextSize(subtitleSettings.textSize)
+                    setSubtitleColors(subtitleSettings)
                 }
             },
             modifier = Modifier.fillMaxSize(),
             update = { playerView ->
                 // Update the player view when subtitle settings change
-                if (isSubtitlesEnabled) {
-                    // Update subtitle styling when settings change
-                    playerView.setSubtitleTextSize(subtitleSettings.textSize)
-                    playerView.setSubtitleColors(subtitleSettings)
-                }
+                // Update subtitle styling when settings change
+                playerView.setSubtitleTextSize(subtitleSettings.textSize)
+                playerView.setSubtitleColors(subtitleSettings)
             }
         )
         
@@ -290,9 +448,17 @@ fun VideoPlayerScreen(
                     Slider(
                         value = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f,
                         onValueChange = { progress ->
+                            isSeeking = true
                             val newPosition = (progress * duration).toLong()
-                            exoPlayer.seekTo(newPosition)
-                            currentPosition = newPosition
+                            try {
+                                exoPlayer?.seekTo(newPosition)
+                                currentPosition = newPosition
+                            } catch (e: Exception) {
+                                // Ignore seek errors
+                            }
+                        },
+                        onValueChangeFinished = {
+                            isSeeking = false
                         },
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -309,25 +475,6 @@ fun VideoPlayerScreen(
                         )
                         
                         Spacer(modifier = Modifier.weight(1f))
-                        
-                        IconButton(
-                            onClick = { isSubtitlesEnabled = !isSubtitlesEnabled },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(
-                                    color = if (isSubtitlesEnabled) MaterialTheme.colorScheme.primary else Color.Gray,
-                                    shape = androidx.compose.foundation.shape.CircleShape
-                                )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Subtitles,
-                                contentDescription = "Subtitles",
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.width(8.dp))
                         
                         Text(
                             text = formatTime(duration),
