@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -81,7 +83,7 @@ fun BottomNavigationBar(navController: NavController) {
                                 ) {}
                             }
                             Icon(
-                                imageVector = screen.icon,
+                                imageVector = screen.icon ?: Icons.Default.Movie, // Provide a fallback icon
                                 contentDescription = stringResource(screen.resourceId),
                                 tint = iconColor,
                                 modifier = Modifier.size(24.dp)

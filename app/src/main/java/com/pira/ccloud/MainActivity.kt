@@ -106,8 +106,8 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            // Only show top bar if the current screen requires it
-            if (currentScreen.showBottomBar) {
+            // Only show top bar if the current screen requires it and we're not on splash
+            if (currentScreen.showBottomBar && currentRoute != AppScreens.Splash.route) {
                 AnimatedContent(
                     targetState = currentScreen,
                     transitionSpec = {
@@ -134,8 +134,8 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
             }
         },
         bottomBar = {
-            // Only show bottom bar if the current screen requires it
-            if (currentScreen.showBottomBar) {
+            // Only show bottom bar if the current screen requires it and we're not on splash
+            if (currentScreen.showBottomBar && currentRoute != AppScreens.Splash.route) {
                 BottomNavigationBar(navController)
             }
         }

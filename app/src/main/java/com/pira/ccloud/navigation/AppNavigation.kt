@@ -11,17 +11,38 @@ import com.pira.ccloud.screens.SeriesScreen
 import com.pira.ccloud.screens.SettingsScreen
 import com.pira.ccloud.screens.SingleMovieScreen
 import com.pira.ccloud.screens.SingleSeriesScreen
+import com.pira.ccloud.screens.SplashScreen
 import com.pira.ccloud.ui.theme.ThemeSettings
+import com.pira.ccloud.ui.theme.ThemeManager
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
     onThemeSettingsChanged: (ThemeSettings) -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val themeManager = ThemeManager(context)
+    val themeSettings = themeManager.loadThemeSettings()
+    
     NavHost(
         navController = navController,
-        startDestination = AppScreens.Movies.route
+        startDestination = AppScreens.Splash.route
     ) {
+        composable(route = AppScreens.Splash.route) {
+            SplashScreen(
+                onTimeout = {
+                    navController.popBackStack()
+                    navController.navigate(AppScreens.Movies.route)
+                },
+                backgroundColor = if (themeSettings.themeMode == com.pira.ccloud.ui.theme.ThemeMode.DARK) {
+                    androidx.compose.ui.graphics.Color(0xFF121212)
+                } else {
+                    androidx.compose.ui.graphics.Color(0xFFFFFBFE)
+                }
+            )
+        }
+        
         composable(route = AppScreens.Movies.route) {
             MoviesScreen(navController = navController)
         }

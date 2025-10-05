@@ -12,9 +12,14 @@ import com.pira.ccloud.R
 sealed class AppScreens(
     val route: String,
     @StringRes val resourceId: Int,
-    val icon: ImageVector,
+    val icon: ImageVector? = null,
     val showBottomBar: Boolean = true
 ) {
+    data object Splash : AppScreens(
+        route = "splash",
+        resourceId = R.string.app_name
+    )
+
     data object Movies : AppScreens(
         route = "movies",
         resourceId = R.string.movies,

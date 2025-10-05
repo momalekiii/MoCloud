@@ -650,12 +650,26 @@ fun SeriesDetailsContent(
                     modifier = Modifier.padding(16.dp)
                 )
             } else if (seasonsViewModel.errorMessage != null) {
-                Text(
-                    text = "Error loading seasons: ${seasonsViewModel.errorMessage}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(16.dp)
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Error loading seasons: ${seasonsViewModel.errorMessage}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { seasonsViewModel.loadSeasons(series.id) },
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text("Retry")
+                    }
+                }
             } else if (seasonsViewModel.seasons.isNotEmpty()) {
                 val selectedSeason = seasonsViewModel.seasons[selectedSeasonIndex]
                 Column {

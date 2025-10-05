@@ -21,6 +21,11 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    
+    buildFeatures {
+        compose = true
+        buildConfig = true // Add this line to enable BuildConfig generation
+    }
 
     signingConfigs {
         create("release") {
