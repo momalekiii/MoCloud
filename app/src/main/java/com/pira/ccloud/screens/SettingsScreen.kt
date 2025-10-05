@@ -47,7 +47,6 @@ import com.pira.ccloud.ui.theme.ThemeSettings
 import com.pira.ccloud.ui.theme.ThemeManager
 import com.pira.ccloud.ui.theme.colorOptions
 import com.pira.ccloud.ui.theme.defaultPrimaryColor
-import com.pira.ccloud.ui.theme.defaultSecondaryColor
 import com.pira.ccloud.utils.StorageUtils
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
 import androidx.compose.foundation.layout.RowScope
@@ -157,23 +156,6 @@ fun SettingsScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
         item {
             AnimatedVisibility(
                 visible = true,
-                enter = fadeIn(animationSpec = tween(800)) + slideInVertically(animationSpec = tween(800, delayMillis = 500)),
-                exit = fadeOut(animationSpec = tween(800)) + slideOutVertically(animationSpec = tween(800))
-            ) {
-                ColorSelectionSection(
-                    title = "Secondary Color",
-                    selectedColor = themeSettings.secondaryColor,
-                    onColorSelected = { color ->
-                        val newSettings = themeSettings.copy(secondaryColor = color)
-                        updateThemeSettings(newSettings)
-                    }
-                )
-            }
-        }
-        
-        item {
-            AnimatedVisibility(
-                visible = true,
                 enter = fadeIn(animationSpec = tween(900)) + slideInVertically(animationSpec = tween(900, delayMillis = 600)),
                 exit = fadeOut(animationSpec = tween(900)) + slideOutVertically(animationSpec = tween(900))
             ) {
@@ -214,6 +196,9 @@ fun SettingsScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
                     onClick = {
                         val defaultSettings = ThemeSettings()
                         updateThemeSettings(defaultSettings)
+                        // Reset subtitle settings to default as well
+                        val defaultSubtitleSettings = SubtitleSettings.DEFAULT
+                        updateSubtitleSettings(defaultSubtitleSettings)
                     }
                 )
             }
@@ -339,7 +324,7 @@ fun ColorSelectionSection(
                     .padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.Start
             ) {
-                val defaultColor = if (title == "Primary Color") defaultPrimaryColor else defaultSecondaryColor
+                val defaultColor = defaultPrimaryColor
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     ColorOption(
                         color = defaultColor,

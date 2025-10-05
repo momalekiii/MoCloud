@@ -84,30 +84,28 @@ fun MoviesScreen(
         }
     }
     
-    Column(modifier = Modifier.fillMaxSize()) {
-        when {
-            isLoading && movies.isEmpty() -> {
-                // Show modern loading animation when initial movies are loading
-                LoadingScreen()
-            }
-            errorMessage != null && movies.isEmpty() -> {
-                ErrorScreen(
-                    errorMessage = errorMessage,
-                    onRetry = { viewModel.retry() }
-                )
-            }
-            else -> {
-                MovieGrid(
-                    movies = movies,
-                    isLoading = isLoading,
-                    isLoadingMore = isLoadingMore,
-                    errorMessage = errorMessage,
-                    onRetry = { viewModel.retry() },
-                    onRefresh = { viewModel.refresh() },
-                    onLoadMore = { viewModel.loadMoreMovies() },
-                    navController = navController
-                )
-            }
+    when {
+        isLoading && movies.isEmpty() -> {
+            // Show modern loading animation when initial movies are loading
+            LoadingScreen()
+        }
+        errorMessage != null && movies.isEmpty() -> {
+            ErrorScreen(
+                errorMessage = errorMessage,
+                onRetry = { viewModel.retry() }
+            )
+        }
+        else -> {
+            MovieGrid(
+                movies = movies,
+                isLoading = isLoading,
+                isLoadingMore = isLoadingMore,
+                errorMessage = errorMessage,
+                onRetry = { viewModel.retry() },
+                onRefresh = { viewModel.refresh() },
+                onLoadMore = { viewModel.loadMoreMovies() },
+                navController = navController
+            )
         }
     }
 }

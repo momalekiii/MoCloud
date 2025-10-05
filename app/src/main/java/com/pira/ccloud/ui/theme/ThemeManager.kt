@@ -17,7 +17,7 @@ class ThemeManager(private val context: Context) {
         prefs.edit {
             putString("theme_mode", settings.themeMode.name)
             putInt("primary_color", settings.primaryColor.toArgb())
-            putInt("secondary_color", settings.secondaryColor.toArgb())
+            // Removed secondary_color as it's no longer used
         }
     }
     
@@ -30,12 +30,12 @@ class ThemeManager(private val context: Context) {
         }
         
         val primaryColor = prefs.getInt("primary_color", defaultPrimaryColor.toArgb())
-        val secondaryColor = prefs.getInt("secondary_color", defaultSecondaryColor.toArgb())
+        // Removed secondary_color as it's no longer used
         
         return ThemeSettings(
             themeMode = themeMode,
-            primaryColor = Color(primaryColor),
-            secondaryColor = Color(secondaryColor)
+            primaryColor = Color(primaryColor)
+            // Removed secondaryColor as it's no longer used
         )
     }
 }

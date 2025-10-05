@@ -68,12 +68,12 @@ fun CCloudTheme(
     }
     
     val colorScheme = when {
-        themeSettings.primaryColor != defaultPrimaryColor || themeSettings.secondaryColor != defaultSecondaryColor -> {
-            // Custom colors
+        themeSettings.primaryColor != defaultPrimaryColor -> {
+            // Custom colors - using the same color for primary and secondary since we removed secondary color setting
             if (darkTheme) {
                 darkColorScheme(
                     primary = themeSettings.primaryColor,
-                    secondary = themeSettings.secondaryColor,
+                    secondary = themeSettings.primaryColor,
                     tertiary = Pink80,
                     background = Color(0xFF121212),
                     surface = Color(0xFF1E1E1E),
@@ -88,7 +88,7 @@ fun CCloudTheme(
             } else {
                 lightColorScheme(
                     primary = themeSettings.primaryColor,
-                    secondary = themeSettings.secondaryColor,
+                    secondary = themeSettings.primaryColor,
                     tertiary = Pink40,
                     background = Color(0xFFFFFBFE),
                     surface = Color(0xFFFFFBFE),

@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -75,42 +77,40 @@ fun SingleMovieScreen(
         movie = StorageUtils.loadMovieFromFile(context, movieId)
     }
     
-    // Using Scaffold without topBar to avoid conflicts with the main app's navigation
-    Scaffold { innerPadding ->
-        if (movie != null) {
-            MovieDetailsContent(
-                movie = movie!!,
-                onBackClick = { navController.popBackStack() },
-                onPlayClick = { source ->
-                    // Launch video player activity
-                    VideoPlayerActivity.start(context, source.url)
-                },
-                modifier = Modifier.padding(innerPadding)
-            )
-        } else {
-            // Show loading or error state
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
+    // Directly render content without Scaffold since it's already in MainScreen's Scaffold
+    if (movie != null) {
+        MovieDetailsContent(
+            movie = movie!!,
+            onBackClick = { navController.popBackStack() },
+            onPlayClick = { source ->
+                // Launch video player activity
+                VideoPlayerActivity.start(context, source.url)
+            },
+            // Remove any padding from parent Scaffold to use full screen
+            modifier = Modifier.fillMaxSize()
+        )
+    } else {
+        // Show loading or error state
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                    Text(
-                        text = "Movie not found",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(top = 16.dp)
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
                     )
                 }
+                Text(
+                    text = "Movie not found",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
             }
         }
     }
@@ -272,26 +272,32 @@ fun MovieDetailsContent(
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp)
             )
             
-            // Set layout direction to RTL for the genres
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .padding(start = 16.dp, end = 16.dp)
-                        .fillMaxWidth(),
-                ) {
-                    movie.genres.forEach { genre ->
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
-                            ),
-                            shape = RoundedCornerShape(16.dp)
+            // Improved genres display with better wrapping and styling
+            LazyRow(
+                modifier = Modifier
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(movie.genres) { genre ->
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        ),
+                        shape = RoundedCornerShape(50.dp), // More rounded corners
+                        modifier = Modifier
+                            .height(32.dp) // Fixed height for consistency
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
                         ) {
                             Text(
                                 text = genre.title,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }
