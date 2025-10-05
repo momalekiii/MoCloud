@@ -689,15 +689,6 @@ fun EpisodeItem(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     
-                    if (episode.description.isNotEmpty()) {
-                        Text(
-                            text = episode.description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 2
-                        )
-                    }
-                    
                     // Show source count if there are multiple sources
                     if (episode.sources.size > 1) {
                         Text(

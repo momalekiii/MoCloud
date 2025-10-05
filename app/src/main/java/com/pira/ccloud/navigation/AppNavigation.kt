@@ -29,7 +29,7 @@ fun AppNavigation(
             SeriesScreen(navController = navController)
         }
         composable(route = AppScreens.Search.route) {
-            SearchScreen()
+            SearchScreen(navController = navController)
         }
         composable(route = AppScreens.Settings.route) {
             SettingsScreen(onThemeSettingsChanged)
