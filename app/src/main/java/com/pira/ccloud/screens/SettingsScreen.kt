@@ -23,9 +23,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -60,9 +62,13 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
 
 @Composable
-fun SettingsScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
+fun SettingsScreen(
+    onThemeSettingsChanged: (ThemeSettings) -> Unit = {},
+    navController: NavController? = null
+) {
     val themeManager = ThemeManager(androidx.compose.ui.platform.LocalContext.current)
     var themeSettings by remember { mutableStateOf(themeManager.loadThemeSettings()) }
     val context = LocalContext.current
@@ -92,11 +98,32 @@ fun SettingsScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
                 enter = fadeIn(animationSpec = tween(300)) + slideInVertically(animationSpec = tween(300)),
                 exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(animationSpec = tween(300))
             ) {
-                Text(
-                    text = stringResource(R.string.settings),
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings),
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    // Add like icon button that navigates to favorites
+                    navController?.let {
+                        IconButton(
+                            onClick = { navController.navigate("favorites") },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = "Favorites",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
             }
         }
         

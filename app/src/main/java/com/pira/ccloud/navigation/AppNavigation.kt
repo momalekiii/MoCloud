@@ -12,6 +12,7 @@ import com.pira.ccloud.screens.SettingsScreen
 import com.pira.ccloud.screens.SingleMovieScreen
 import com.pira.ccloud.screens.SingleSeriesScreen
 import com.pira.ccloud.screens.SplashScreen
+import com.pira.ccloud.screens.FavoritesScreen
 import com.pira.ccloud.ui.theme.ThemeSettings
 import com.pira.ccloud.ui.theme.ThemeManager
 import androidx.compose.ui.platform.LocalContext
@@ -53,7 +54,10 @@ fun AppNavigation(
             SearchScreen(navController = navController)
         }
         composable(route = AppScreens.Settings.route) {
-            SettingsScreen(onThemeSettingsChanged)
+            SettingsScreen(onThemeSettingsChanged, navController)
+        }
+        composable(route = AppScreens.Favorites.route) {
+            FavoritesScreen(navController)
         }
         composable(
             route = AppScreens.SingleMovie.route,

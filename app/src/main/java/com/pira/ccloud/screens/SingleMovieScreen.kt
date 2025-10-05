@@ -25,6 +25,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
@@ -61,6 +63,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.pira.ccloud.VideoPlayerActivity
 import com.pira.ccloud.components.DownloadOptionsDialog
+import com.pira.ccloud.data.model.FavoriteItem
 import com.pira.ccloud.data.model.Movie
 import com.pira.ccloud.data.model.Source
 import com.pira.ccloud.utils.DownloadUtils
@@ -137,7 +140,7 @@ fun MovieDetailsContent(
             onDismiss = { showSourceDialog = false },
             onDownload = { source ->
                 showSourceDialog = false
-                openUrl(context, source.url)
+                DownloadUtils.openUrl(context, source.url)
             },
             onPlay = { source ->
                 showSourceDialog = false
@@ -215,6 +218,57 @@ fun MovieDetailsContent(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
                     tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            
+            // Favorite button
+            var isFavorite by remember { mutableStateOf(false) }
+            val context = LocalContext.current
+            val movieId = movie.id
+            
+            // Check if movie is already favorite
+            LaunchedEffect(movieId) {
+                isFavorite = StorageUtils.isFavorite(context, movieId, "movie")
+            }
+            
+            IconButton(
+                onClick = {
+                    if (isFavorite) {
+                        StorageUtils.removeFavorite(context, movieId, "movie")
+                        isFavorite = false
+                        // Show toast
+                        android.widget.Toast.makeText(context, "Removed from favorites", android.widget.Toast.LENGTH_SHORT).show()
+                    } else {
+                        // Convert movie to favorite item with sources
+                        val favoriteItem = FavoriteItem(
+                            id = movie.id,
+                            type = "movie",
+                            title = movie.title,
+                            description = movie.description,
+                            year = movie.year,
+                            imdb = movie.imdb,
+                            rating = movie.rating,
+                            duration = movie.duration,
+                            image = movie.image,
+                            cover = movie.cover,
+                            genres = movie.genres,
+                            country = movie.country,
+                            sources = movie.sources // Include sources in favorites
+                        )
+                        StorageUtils.saveFavorite(context, favoriteItem)
+                        isFavorite = true
+                        // Show toast
+                        android.widget.Toast.makeText(context, "Added to favorites", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.TopEnd)
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = "Favorite",
+                    tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                 )
             }
         }

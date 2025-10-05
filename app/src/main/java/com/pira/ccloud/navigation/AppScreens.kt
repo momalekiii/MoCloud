@@ -58,6 +58,12 @@ sealed class AppScreens(
         showBottomBar = false
     )
 
+    data object Favorites : AppScreens(
+        route = "favorites",
+        resourceId = R.string.favorites,
+        showBottomBar = false
+    )
+
     companion object {
         val screens = listOf(Movies, Series, Search, Settings)
     }

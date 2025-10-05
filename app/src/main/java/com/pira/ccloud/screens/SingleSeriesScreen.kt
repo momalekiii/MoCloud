@@ -26,6 +26,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
@@ -36,6 +38,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -62,7 +65,9 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.pira.ccloud.VideoPlayerActivity
 import com.pira.ccloud.components.DownloadOptionsDialog
+import com.pira.ccloud.data.model.FavoriteItem
 import com.pira.ccloud.data.model.Episode
+import com.pira.ccloud.data.model.Season
 import com.pira.ccloud.data.model.Series
 import com.pira.ccloud.data.model.Source
 import com.pira.ccloud.ui.series.SeasonsViewModel
@@ -142,8 +147,9 @@ fun SingleSeriesScreen(
                         downloadSources = episode.sources
                         showDownloadMenu = true
                     } else {
-                        // Directly download if there's only one source
-                        openUrlSeries(context, episode.sources[0].url)
+                        // Show download options even for single source
+                        downloadSources = episode.sources
+                        showDownloadMenu = true
                     }
                 }
             },
@@ -219,12 +225,15 @@ fun SourceOptionsDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Download options button
+                // Download options button - Show for all episodes with sources
                 Button(
                     onClick = { 
                         if (episode.sources.size == 1) {
                             selectedSource = episode.sources[0]
                             showDownloadOptions = true
+                        } else {
+                            // For multiple sources, we'll handle this in the DownloadMenu
+                            // But since we're already in SourceOptionsDialog, this case shouldn't happen
                         }
                     },
                     enabled = episode.sources.isNotEmpty(),
@@ -285,10 +294,24 @@ fun DownloadMenu(
     var selectedSource by remember { mutableStateOf<Source?>(null) }
     var showDownloadOptions by remember { mutableStateOf(false) }
     
+    // If there's only one source, directly set it as selected and show download options
+    LaunchedEffect(sources) {
+        if (sources.size == 1) {
+            selectedSource = sources[0]
+            showDownloadOptions = true
+        }
+    }
+    
     if (showDownloadOptions && selectedSource != null) {
         DownloadOptionsDialog(
             source = selectedSource!!,
-            onDismiss = { showDownloadOptions = false },
+            onDismiss = { 
+                showDownloadOptions = false
+                // If we only had one source, also dismiss the menu
+                if (sources.size == 1) {
+                    onDismiss()
+                }
+            },
             onCopyLink = { DownloadUtils.copyToClipboard(context, selectedSource!!.url) },
             onDownloadWithBrowser = { DownloadUtils.openUrl(context, selectedSource!!.url) },
             onDownloadWithADM = { DownloadUtils.openWithADM(context, selectedSource!!.url) },
@@ -296,65 +319,68 @@ fun DownloadMenu(
         )
     }
     
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Select Quality to Download",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Text(
-                text = "Choose a quality option for download",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        confirmButton = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                sources.forEach { source ->
-                    Button(
-                        onClick = { 
-                            selectedSource = source
-                            showDownloadOptions = true
-                        },
+    // Only show the quality selection if there are multiple sources
+    if (sources.size > 1) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    text = "Select Quality to Download",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Choose a quality option for download",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    sources.forEach { source ->
+                        Button(
+                            onClick = { 
+                                selectedSource = source
+                                showDownloadOptions = true
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
+                            elevation = androidx.compose.material3.ButtonDefaults.elevatedButtonElevation()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = "Download",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("${source.quality}")
+                        }
+                    }
+                    
+                    // Cancel button
+                    TextButton(
+                        onClick = onDismiss,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ),
-                        elevation = androidx.compose.material3.ButtonDefaults.elevatedButtonElevation()
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Download,
-                            contentDescription = "Download",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("${source.quality}")
+                        Text("Cancel")
                     }
                 }
-                
-                // Cancel button
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Text("Cancel")
-                }
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(20.dp),
-        tonalElevation = 6.dp
-    )
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(20.dp),
+            tonalElevation = 6.dp
+        )
+    }
 }
 
 
@@ -439,6 +465,56 @@ fun SeriesDetailsContent(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                
+                // Favorite button
+                var isFavorite by remember { mutableStateOf(false) }
+                val context = LocalContext.current
+                val seriesId = series.id
+                
+                // Check if series is already favorite
+                LaunchedEffect(seriesId) {
+                    isFavorite = StorageUtils.isFavorite(context, seriesId, "series")
+                }
+                
+                IconButton(
+                    onClick = {
+                        if (isFavorite) {
+                            StorageUtils.removeFavorite(context, seriesId, "series")
+                            isFavorite = false
+                            // Show toast
+                            android.widget.Toast.makeText(context, "Removed from favorites", android.widget.Toast.LENGTH_SHORT).show()
+                        } else {
+                            // Convert series to favorite item
+                            val favoriteItem = FavoriteItem(
+                                id = series.id,
+                                type = "series",
+                                title = series.title,
+                                description = series.description,
+                                year = series.year,
+                                imdb = series.imdb,
+                                rating = series.rating,
+                                duration = series.duration,
+                                image = series.image,
+                                cover = series.cover,
+                                genres = series.genres,
+                                country = series.country
+                            )
+                            StorageUtils.saveFavorite(context, favoriteItem)
+                            isFavorite = true
+                            // Show toast
+                            android.widget.Toast.makeText(context, "Added to favorites", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .align(Alignment.TopEnd)
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -562,26 +638,6 @@ fun SeriesDetailsContent(
                         .padding(start = 16.dp, end = 16.dp)
                         .fillMaxWidth(),
                     textAlign = TextAlign.Right
-                )
-            }
-        }
-        
-        item {
-            // Duration/Seasons info
-            if (series.duration != null) {
-                Text(
-                    text = "Duration",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp)
-                )
-                
-                Text(
-                    text = series.duration!!,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
         }

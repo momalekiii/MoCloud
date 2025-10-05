@@ -85,6 +85,7 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
     val currentScreen = when {
         currentRoute?.startsWith("single_movie") == true -> AppScreens.SingleMovie
         currentRoute?.startsWith("single_series") == true -> AppScreens.SingleSeries
+        currentRoute == AppScreens.Favorites.route -> AppScreens.Favorites
         else -> AppScreens.screens.find { it.route == currentRoute } ?: AppScreens.Movies
     }
     
@@ -105,34 +106,6 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
     
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = {
-            // Only show top bar if the current screen requires it and we're not on splash
-            if (currentScreen.showBottomBar && currentRoute != AppScreens.Splash.route) {
-                AnimatedContent(
-                    targetState = currentScreen,
-                    transitionSpec = {
-                        fadeIn(animationSpec = tween(220, delayMillis = 90)) togetherWith
-                        fadeOut(animationSpec = tween(90))
-                    },
-                    label = "topBar"
-                ) { screen ->
-                    CenterAlignedTopAppBar(
-                        title = {
-                            Text(
-                                text = stringResource(screen.resourceId),
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
-                            )
-                        },
-                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
-                            titleContentColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                        ),
-                        modifier = Modifier.height(38.dp) // Reduced height for less spacing
-                    )
-                }
-            }
-        },
         bottomBar = {
             // Only show bottom bar if the current screen requires it and we're not on splash
             if (currentScreen.showBottomBar && currentRoute != AppScreens.Splash.route) {
