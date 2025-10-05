@@ -225,31 +225,6 @@ fun SourceOptionsDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Download options button - Show for all episodes with sources
-                Button(
-                    onClick = { 
-                        if (episode.sources.size == 1) {
-                            selectedSource = episode.sources[0]
-                            showDownloadOptions = true
-                        } else {
-                            // For multiple sources, we'll handle this in the DownloadMenu
-                            // But since we're already in SourceOptionsDialog, this case shouldn't happen
-                        }
-                    },
-                    enabled = episode.sources.isNotEmpty(),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = androidx.compose.material3.ButtonDefaults.elevatedButtonElevation()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Download,
-                        contentDescription = "Download",
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Download Options")
-                }
-                
                 // Play buttons for each source/quality
                 episode.sources.forEach { source ->
                     Button(
