@@ -81,9 +81,10 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
     
-    // Find the current screen, including the SingleMovie screen
+    // Find the current screen, including the SingleMovie and SingleSeries screens
     val currentScreen = when {
         currentRoute?.startsWith("single_movie") == true -> AppScreens.SingleMovie
+        currentRoute?.startsWith("single_series") == true -> AppScreens.SingleSeries
         else -> AppScreens.screens.find { it.route == currentRoute } ?: AppScreens.Movies
     }
     

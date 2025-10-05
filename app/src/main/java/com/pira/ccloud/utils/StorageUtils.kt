@@ -3,6 +3,7 @@ package com.pira.ccloud.utils
 import android.content.Context
 import android.util.Log
 import com.pira.ccloud.data.model.Movie
+import com.pira.ccloud.data.model.Series
 import com.pira.ccloud.data.model.SubtitleSettings
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -58,6 +59,57 @@ object StorageUtils {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing all movies", e)
+        }
+    }
+    
+    // Series functions
+    fun saveSeriesToFile(context: Context, series: Series) {
+        try {
+            // Clear all existing series files first
+            clearAllSeries(context)
+            
+            val jsonString = Json.encodeToString(series)
+            val fileName = "series_${series.id}.json"
+            val file = File(context.filesDir, fileName)
+            file.writeText(jsonString)
+            Log.d(TAG, "Series saved to file: $fileName")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving series to file", e)
+        }
+    }
+    
+    fun loadSeriesFromFile(context: Context, seriesId: Int): Series? {
+        return try {
+            val fileName = "series_$seriesId.json"
+            val file = File(context.filesDir, fileName)
+            if (file.exists()) {
+                val jsonString = file.readText()
+                Json.decodeFromString<Series>(jsonString)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading series from file", e)
+            null
+        }
+    }
+    
+    /**
+     * Delete all series files from storage
+     */
+    fun clearAllSeries(context: Context) {
+        try {
+            val filesDir = context.filesDir
+            val seriesFiles = filesDir.listFiles { file ->
+                file.name.startsWith("series_") && file.name.endsWith(".json")
+            }
+            
+            seriesFiles?.forEach { file ->
+                file.delete()
+                Log.d(TAG, "Deleted series file: ${file.name}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error clearing all series", e)
         }
     }
     

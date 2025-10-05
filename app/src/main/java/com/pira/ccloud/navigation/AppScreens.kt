@@ -45,6 +45,13 @@ sealed class AppScreens(
         icon = Icons.Default.Movie,
         showBottomBar = false
     )
+    
+    data object SingleSeries : AppScreens(
+        route = "single_series/{seriesId}",
+        resourceId = R.string.series_details,
+        icon = Icons.Default.Tv,
+        showBottomBar = false
+    )
 
     companion object {
         val screens = listOf(Movies, Series, Search, Settings)

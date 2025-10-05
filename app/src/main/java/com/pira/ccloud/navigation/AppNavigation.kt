@@ -10,6 +10,7 @@ import com.pira.ccloud.screens.SearchScreen
 import com.pira.ccloud.screens.SeriesScreen
 import com.pira.ccloud.screens.SettingsScreen
 import com.pira.ccloud.screens.SingleMovieScreen
+import com.pira.ccloud.screens.SingleSeriesScreen
 import com.pira.ccloud.ui.theme.ThemeSettings
 
 @Composable
@@ -25,7 +26,7 @@ fun AppNavigation(
             MoviesScreen(navController = navController)
         }
         composable(route = AppScreens.Series.route) {
-            SeriesScreen()
+            SeriesScreen(navController = navController)
         }
         composable(route = AppScreens.Search.route) {
             SearchScreen()
@@ -39,6 +40,13 @@ fun AppNavigation(
         ) { backStackEntry ->
             val movieId = backStackEntry.arguments?.getString("movieId")?.toIntOrNull() ?: 0
             SingleMovieScreen(movieId = movieId, navController = navController)
+        }
+        composable(
+            route = AppScreens.SingleSeries.route,
+            arguments = listOf(navArgument("seriesId") { defaultValue = "0" })
+        ) { backStackEntry ->
+            val seriesId = backStackEntry.arguments?.getString("seriesId")?.toIntOrNull() ?: 0
+            SingleSeriesScreen(seriesId = seriesId, navController = navController)
         }
     }
 }
