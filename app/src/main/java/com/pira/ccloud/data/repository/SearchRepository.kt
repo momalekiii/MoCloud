@@ -12,6 +12,7 @@ import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
 class SearchRepository {
@@ -26,7 +27,8 @@ class SearchRepository {
     suspend fun search(query: String): SearchResult {
         return withContext(Dispatchers.IO) {
             try {
-                val encodedQuery = URLEncoder.encode(query, "UTF-8")
+                // Properly encode the query for URL paths
+                val encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString()).replace("+", "%20")
                 val url = "$BASE_URL/$encodedQuery/$API_KEY/"
                 val request = Request.Builder()
                     .url(url)
