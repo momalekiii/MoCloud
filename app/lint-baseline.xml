@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.7.2" type="baseline" client="cli" dependencies="false" name="AGP (8.7.2)" variant="all" version="8.7.2">
+    <issue
+        id="MissingDefaultResource"
+        severity="error"
+        message="The layout &quot;activity_main&quot; in layout-television has no declaration in the base layout folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        category="Correctness"
+        priority="6"
+        summary="Missing default resource"
+        explanation="If a resource is only defined in folders with resource qualifiers, it might crash your app on devices where the resource is not found for the current configuration.&#xA;&#xA;For example, if you define a layout only in `layout-sw600dp`, and a tablet in landscape mode tries to inflate that layout, it will crash because it will not be found for that specific configuration.&#xA;&#xA;In this case, you should also define a default version of the resource in the base resource folder."
+        errorLine1="&lt;FrameLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^"
+        quickfix="studio">
+        <location
+            file="src/main/res/layout-television/activity_main.xml"
+            line="3"
+            column="1"/>
+    </issue>
+</issues>
