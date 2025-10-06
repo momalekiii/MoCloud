@@ -6,6 +6,7 @@ import com.pira.ccloud.data.model.FavoriteItem
 import com.pira.ccloud.data.model.Movie
 import com.pira.ccloud.data.model.Series
 import com.pira.ccloud.data.model.SubtitleSettings
+import com.pira.ccloud.data.model.VideoPlayerSettings
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -261,6 +262,33 @@ object StorageUtils {
         } catch (e: Exception) {
             Log.e(TAG, "Error loading subtitle settings from file", e)
             SubtitleSettings.DEFAULT
+        }
+    }
+    
+    // Video player settings functions
+    fun saveVideoPlayerSettings(context: Context, settings: VideoPlayerSettings) {
+        try {
+            val jsonString = Json.encodeToString(settings)
+            val file = File(context.filesDir, "video_player_settings.json")
+            file.writeText(jsonString)
+            Log.d(TAG, "Video player settings saved to file")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving video player settings to file", e)
+        }
+    }
+    
+    fun loadVideoPlayerSettings(context: Context): VideoPlayerSettings {
+        return try {
+            val file = File(context.filesDir, "video_player_settings.json")
+            if (file.exists()) {
+                val jsonString = file.readText()
+                Json.decodeFromString<VideoPlayerSettings>(jsonString)
+            } else {
+                VideoPlayerSettings.DEFAULT
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading video player settings from file", e)
+            VideoPlayerSettings.DEFAULT
         }
     }
 }

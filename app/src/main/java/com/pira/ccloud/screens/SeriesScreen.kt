@@ -65,6 +65,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.pira.ccloud.data.model.Series
 import com.pira.ccloud.ui.series.SeriesViewModel
+import com.pira.ccloud.utils.DeviceUtils
 import com.pira.ccloud.utils.StorageUtils
 
 @Composable
@@ -133,8 +134,9 @@ fun LoadingScreenSeries() {
             enter = fadeIn(initialAlpha = 0.3f),
             exit = fadeOut()
         ) {
+            val columns = DeviceUtils.getGridColumns(LocalContext.current.resources)
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
+                columns = GridCells.Fixed(columns),
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -266,8 +268,9 @@ fun SeriesGrid(
     val seriesList = series.toList()
     val context = LocalContext.current
     
+    val columns = DeviceUtils.getGridColumns(LocalContext.current.resources)
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(columns),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),

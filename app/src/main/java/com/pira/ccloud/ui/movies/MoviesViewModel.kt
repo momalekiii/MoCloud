@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pira.ccloud.data.model.Movie
 import com.pira.ccloud.data.repository.MovieRepository
+import com.pira.ccloud.utils.LanguageUtils
 import kotlinx.coroutines.launch
 
 class MoviesViewModel : ViewModel() {
@@ -46,13 +47,18 @@ class MoviesViewModel : ViewModel() {
                 
                 val newMovies = repository.getMovies(page)
                 
+                // Filter out movies with Farsi titles
+                val filteredMovies = newMovies.filter { movie ->
+                    LanguageUtils.shouldDisplayTitle(movie.title)
+                }
+                
                 // If we get fewer movies than expected, we've reached the end
-                canLoadMore = newMovies.isNotEmpty()
+                canLoadMore = filteredMovies.isNotEmpty()
                 
                 if (page == 0) {
-                    movies = newMovies
+                    movies = filteredMovies
                 } else {
-                    movies = movies + newMovies
+                    movies = movies + filteredMovies
                 }
                 
                 currentPage = page

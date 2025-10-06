@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pira.ccloud.data.model.Series
 import com.pira.ccloud.data.repository.SeriesRepository
+import com.pira.ccloud.utils.LanguageUtils
 import kotlinx.coroutines.launch
 
 class SeriesViewModel : ViewModel() {
@@ -46,13 +47,18 @@ class SeriesViewModel : ViewModel() {
                 
                 val newSeries = repository.getSeries(page)
                 
+                // Filter out series with Farsi titles
+                val filteredSeries = newSeries.filter { seriesItem ->
+                    LanguageUtils.shouldDisplayTitle(seriesItem.title)
+                }
+                
                 // If we get fewer series than expected, we've reached the end
-                canLoadMore = newSeries.isNotEmpty()
+                canLoadMore = filteredSeries.isNotEmpty()
                 
                 if (page == 0) {
-                    series = newSeries
+                    series = filteredSeries
                 } else {
-                    series = series + newSeries
+                    series = series + filteredSeries
                 }
                 
                 currentPage = page

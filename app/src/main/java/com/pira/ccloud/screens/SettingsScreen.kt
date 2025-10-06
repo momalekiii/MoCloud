@@ -44,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.pira.ccloud.R
 import com.pira.ccloud.data.model.SubtitleSettings
+import com.pira.ccloud.data.model.VideoPlayerSettings
 import com.pira.ccloud.ui.theme.ThemeMode
 import com.pira.ccloud.ui.theme.ThemeSettings
 import com.pira.ccloud.ui.theme.ThemeManager
@@ -73,6 +74,7 @@ fun SettingsScreen(
     var themeSettings by remember { mutableStateOf(themeManager.loadThemeSettings()) }
     val context = LocalContext.current
     var subtitleSettings by remember { mutableStateOf(StorageUtils.loadSubtitleSettings(context)) }
+    var videoPlayerSettings by remember { mutableStateOf(StorageUtils.loadVideoPlayerSettings(context)) }
     
     // Update parent when settings change
     fun updateThemeSettings(newSettings: ThemeSettings) {
@@ -85,6 +87,12 @@ fun SettingsScreen(
     fun updateSubtitleSettings(newSettings: SubtitleSettings) {
         subtitleSettings = newSettings
         StorageUtils.saveSubtitleSettings(context, newSettings)
+    }
+    
+    // Update video player settings
+    fun updateVideoPlayerSettings(newSettings: VideoPlayerSettings) {
+        videoPlayerSettings = newSettings
+        StorageUtils.saveVideoPlayerSettings(context, newSettings)
     }
     
     LazyColumn(
@@ -183,6 +191,19 @@ fun SettingsScreen(
         item {
             AnimatedVisibility(
                 visible = true,
+                enter = fadeIn(animationSpec = tween(800)) + slideInVertically(animationSpec = tween(800, delayMillis = 500)),
+                exit = fadeOut(animationSpec = tween(800)) + slideOutVertically(animationSpec = tween(800))
+            ) {
+                VideoPlayerSettingsSection(
+                    videoPlayerSettings = videoPlayerSettings,
+                    onSettingsChanged = { updateVideoPlayerSettings(it) }
+                )
+            }
+        }
+        
+        item {
+            AnimatedVisibility(
+                visible = true,
                 enter = fadeIn(animationSpec = tween(900)) + slideInVertically(animationSpec = tween(900, delayMillis = 600)),
                 exit = fadeOut(animationSpec = tween(900)) + slideOutVertically(animationSpec = tween(900))
             ) {
@@ -226,6 +247,9 @@ fun SettingsScreen(
                         // Reset subtitle settings to default as well
                         val defaultSubtitleSettings = SubtitleSettings.DEFAULT
                         updateSubtitleSettings(defaultSubtitleSettings)
+                        // Reset video player settings to default as well
+                        val defaultVideoPlayerSettings = VideoPlayerSettings.DEFAULT
+                        updateVideoPlayerSettings(defaultVideoPlayerSettings)
                     }
                 )
             }
@@ -427,6 +451,41 @@ fun ResetToDefaultsButton(onClick: () -> Unit) {
                 text = "Reset to Defaults",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
+fun VideoPlayerSettingsSection(
+    videoPlayerSettings: VideoPlayerSettings,
+    onSettingsChanged: (VideoPlayerSettings) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Video Player Settings",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            
+            Text(
+                text = "Seek Time: ${videoPlayerSettings.seekTimeSeconds} seconds",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            
+            Slider(
+                value = videoPlayerSettings.seekTimeSeconds.toFloat(),
+                onValueChange = { seconds ->
+                    onSettingsChanged(videoPlayerSettings.copy(seekTimeSeconds = seconds.toInt()))
+                },
+                valueRange = 5f..30f,
+                steps = 24, // Allow values from 5 to 30 in 1-second increments
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

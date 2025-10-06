@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pira.ccloud.data.model.Poster
 import com.pira.ccloud.data.repository.SearchRepository
+import com.pira.ccloud.utils.LanguageUtils
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -53,7 +54,13 @@ class SearchViewModel : ViewModel() {
                 errorMessage = null
                 
                 val result = repository.search(query)
-                searchResults = result.posters
+                
+                // Filter out posters with Farsi titles
+                val filteredPosters = result.posters.filter { poster ->
+                    LanguageUtils.shouldDisplayTitle(poster.title)
+                }
+                
+                searchResults = filteredPosters
             } catch (e: Exception) {
                 errorMessage = e.message
                 searchResults = emptyList()

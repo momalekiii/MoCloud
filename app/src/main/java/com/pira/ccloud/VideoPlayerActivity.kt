@@ -5,7 +5,11 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.TypedValue
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
@@ -15,6 +19,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,8 +31,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Forward
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -53,6 +61,7 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import com.pira.ccloud.data.model.SubtitleSettings
+import com.pira.ccloud.data.model.VideoPlayerSettings
 import com.pira.ccloud.utils.StorageUtils
 import kotlinx.coroutines.delay
 
@@ -184,6 +193,13 @@ fun VideoPlayerScreen(
     var showControls by remember { mutableStateOf(true) }
     var isSeeking by remember { mutableStateOf(false) }
     var playerError by remember { mutableStateOf<String?>(null) }
+    var showForwardIndicator by remember { mutableStateOf(false) }
+    var showRewindIndicator by remember { mutableStateOf(false) }
+    
+    // Load video player settings
+    val videoPlayerSettings = remember(context) {
+        StorageUtils.loadVideoPlayerSettings(context)
+    }
     
     // Load subtitle settings
     val subtitleSettings = remember(context) {
@@ -307,6 +323,21 @@ fun VideoPlayerScreen(
         }
     }
     
+    // Hide forward/rewind indicators after a delay
+    LaunchedEffect(showForwardIndicator) {
+        if (showForwardIndicator) {
+            delay(500) // Hide after 500ms
+            showForwardIndicator = false
+        }
+    }
+    
+    LaunchedEffect(showRewindIndicator) {
+        if (showRewindIndicator) {
+            delay(500) // Hide after 500ms
+            showRewindIndicator = false
+        }
+    }
+    
     // Clean up player
     DisposableEffect(exoPlayer) {
         onDispose {
@@ -322,12 +353,49 @@ fun VideoPlayerScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .clickable { 
-                showControls = !showControls
-                // Reset the auto-hide timer when controls are shown
-                if (showControls && isPlaying) {
-                    // The LaunchedEffect above will handle the auto-hide
-                }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = { offset ->
+                        // Calculate if the tap is on the left or right side
+                        val screenWidth = size.width
+                        val tapX = offset.x
+                        
+                        if (tapX < screenWidth / 2) {
+                            // Left side - rewind specified seconds
+                            try {
+                                exoPlayer?.let { player ->
+                                    val seekTimeMs = videoPlayerSettings.seekTimeSeconds * 1000L
+                                    val newPosition = (player.currentPosition - seekTimeMs).coerceAtLeast(0L)
+                                    player.seekTo(newPosition)
+                                    currentPosition = newPosition
+                                    showRewindIndicator = true
+                                }
+                            } catch (e: Exception) {
+                                // Ignore seek errors
+                            }
+                        } else {
+                            // Right side - forward specified seconds
+                            try {
+                                exoPlayer?.let { player ->
+                                    val seekTimeMs = videoPlayerSettings.seekTimeSeconds * 1000L
+                                    val newPosition = (player.currentPosition + seekTimeMs).coerceAtMost(player.duration)
+                                    player.seekTo(newPosition)
+                                    currentPosition = newPosition
+                                    showForwardIndicator = true
+                                }
+                            } catch (e: Exception) {
+                                // Ignore seek errors
+                            }
+                        }
+                    },
+                    onTap = {
+                        showControls = !showControls
+                        // Reset the auto-hide timer when controls are shown
+                        if (showControls && isPlaying) {
+                            // The LaunchedEffect above will handle the auto-hide
+                        }
+                    }
+                )
             }
     ) {
         // Show error message if player failed to initialize
@@ -387,6 +455,58 @@ fun VideoPlayerScreen(
                 playerView.setSubtitleColors(subtitleSettings)
             }
         )
+        
+        // Rewind indicator
+        if (showRewindIndicator) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Replay,
+                        contentDescription = "Rewind ${videoPlayerSettings.seekTimeSeconds} seconds",
+                        tint = Color.White,
+                        modifier = Modifier.size(64.dp)
+                    )
+                    Text(
+                        text = "${videoPlayerSettings.seekTimeSeconds}s",
+                        color = Color.White,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+        }
+        
+        // Forward indicator
+        if (showForwardIndicator) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Forward,
+                        contentDescription = "Forward ${videoPlayerSettings.seekTimeSeconds} seconds",
+                        tint = Color.White,
+                        modifier = Modifier.size(64.dp)
+                    )
+                    Text(
+                        text = "${videoPlayerSettings.seekTimeSeconds}s",
+                        color = Color.White,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+        }
         
         // Custom controls overlay
         if (showControls) {

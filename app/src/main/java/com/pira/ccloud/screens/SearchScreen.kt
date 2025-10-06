@@ -69,6 +69,7 @@ import coil.request.ImageRequest
 import com.pira.ccloud.R
 import com.pira.ccloud.data.model.Poster
 import com.pira.ccloud.ui.search.SearchViewModel
+import com.pira.ccloud.utils.DeviceUtils
 import com.pira.ccloud.utils.StorageUtils
 
 @Composable
@@ -241,8 +242,9 @@ fun SearchResultsGrid(
     navController: NavController?,
     context: Context
 ) {
+    val columns = DeviceUtils.getGridColumns(LocalContext.current.resources)
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(columns),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(0.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
