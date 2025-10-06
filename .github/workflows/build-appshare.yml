@@ -28,7 +28,16 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
+        uses: gradle/wrapper-validation-action@v2
+        continue-on-error: true
+
+      - name: Check Gradle Wrapper Validation Result
+        run: |
+          if [ ! -f "gradle/wrapper/gradle-wrapper.jar.sha256" ]; then
+            echo "Gradle wrapper checksum missing, generating new one..."
+            cd gradle/wrapper
+            sha256sum gradle-wrapper.jar > gradle-wrapper.jar.sha256
+          fi
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2

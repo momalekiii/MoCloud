@@ -97,6 +97,34 @@ To build the release APK:
 ./gradlew assembleRelease
 ```
 
+### Fixing Gradle Wrapper Issues
+
+If you encounter Gradle wrapper validation errors (especially in CI/CD environments), you can fix them using the provided scripts:
+
+On Unix/Linux/macOS:
+```bash
+./scripts/fix-gradle-wrapper.sh
+```
+
+On Windows:
+```cmd
+scripts\fix-gradle-wrapper.bat
+```
+
+You can also verify the integrity of the Gradle wrapper:
+
+On Unix/Linux/macOS:
+```bash
+./scripts/verify-gradle-wrapper.sh
+```
+
+On Windows:
+```cmd
+scripts\verify-gradle-wrapper.bat
+```
+
+These scripts will regenerate the Gradle wrapper checksums which are required for validation.
+
 ## Project Structure
 
 ```

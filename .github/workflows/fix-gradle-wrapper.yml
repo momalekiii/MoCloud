@@ -1,0 +1,37 @@
+name: Fix Gradle Wrapper
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [fix-gradle-wrapper]
+
+jobs:
+  fix-wrapper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Update Gradle Wrapper
+        run: |
+          ./gradlew wrapper --gradle-version 8.11.1
+
+      - name: Generate new checksum
+        run: |
+          cd gradle/wrapper
+          rm -f gradle-wrapper.jar.sha256
+          sha256sum gradle-wrapper.jar > gradle-wrapper.jar.sha256
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add gradle/wrapper/gradle-wrapper.jar.sha256
+          git commit -m "Fix Gradle wrapper checksum"
+          git push
