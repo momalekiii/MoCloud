@@ -86,6 +86,7 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
         currentRoute?.startsWith("single_movie") == true -> AppScreens.SingleMovie
         currentRoute?.startsWith("single_series") == true -> AppScreens.SingleSeries
         currentRoute == AppScreens.Favorites.route -> AppScreens.Favorites
+        currentRoute == AppScreens.About.route -> AppScreens.About
         else -> AppScreens.screens.find { it.route == currentRoute } ?: AppScreens.Movies
     }
     

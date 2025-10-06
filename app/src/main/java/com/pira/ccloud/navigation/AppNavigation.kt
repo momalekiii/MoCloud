@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.pira.ccloud.screens.AboutScreen
 import com.pira.ccloud.screens.MoviesScreen
 import com.pira.ccloud.screens.SearchScreen
 import com.pira.ccloud.screens.SeriesScreen
@@ -58,6 +59,9 @@ fun AppNavigation(
         }
         composable(route = AppScreens.Favorites.route) {
             FavoritesScreen(navController)
+        }
+        composable(route = AppScreens.About.route) {
+            AboutScreen(navController)
         }
         composable(
             route = AppScreens.SingleMovie.route,
