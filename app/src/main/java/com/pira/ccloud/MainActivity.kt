@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,15 +42,20 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.pira.ccloud.navigation.AppNavigation
 import com.pira.ccloud.navigation.AppScreens
 import com.pira.ccloud.navigation.BottomNavigationBar
+import com.pira.ccloud.navigation.SidebarNavigation
 import com.pira.ccloud.ui.theme.CCloudTheme
 import com.pira.ccloud.ui.theme.ThemeManager
 import com.pira.ccloud.ui.theme.ThemeSettings
+import com.pira.ccloud.utils.DeviceUtils
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Set default orientation to portrait
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        // Set default orientation to portrait for mobile/tablet
+        // For TV, we don't set orientation as it's typically fixed
+        if (!DeviceUtils.isTv(this)) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
         enableEdgeToEdge()
         setContent {
             MainApp()
@@ -77,6 +84,8 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
     val navController = rememberNavController()
     val themeManager = ThemeManager(androidx.compose.ui.platform.LocalContext.current)
     val themeSettings = themeManager.loadThemeSettings()
+    val configuration = LocalConfiguration.current
+    val isTv = DeviceUtils.isTv(androidx.compose.ui.platform.LocalContext.current)
     
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
@@ -109,14 +118,38 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
             // Only show bottom bar if the current screen requires it and we're not on splash
-            if (currentScreen.showBottomBar && currentRoute != AppScreens.Splash.route) {
+            // and we're not on TV (TV uses sidebar instead)
+            if (!isTv && currentScreen.showBottomBar && currentRoute != AppScreens.Splash.route) {
                 BottomNavigationBar(navController)
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            // Pass theme settings callback to navigation
-            AppNavigation(navController, onThemeSettingsChanged)
+        if (isTv) {
+            // TV layout with sidebar navigation
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                // Sidebar navigation for TV
+                SidebarNavigation(navController)
+                
+                // Main content area with padding to separate from sidebar
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 16.dp, end = 24.dp, top = 24.dp, bottom = 24.dp)
+                ) {
+                    // Pass theme settings callback to navigation
+                    AppNavigation(navController, onThemeSettingsChanged)
+                }
+            }
+        } else {
+            // Mobile/tablet layout with bottom navigation
+            Box(modifier = Modifier.padding(innerPadding)) {
+                // Pass theme settings callback to navigation
+                AppNavigation(navController, onThemeSettingsChanged)
+            }
         }
     }
 }

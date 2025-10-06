@@ -19,16 +19,28 @@ CCloud is a modern Android streaming application built with Jetpack Compose and 
 - **Download Options**: Multiple download methods including browser, ADM, and VLC
 - **Fullscreen Experience**: Optimized landscape mode for immersive viewing
 
+### ❤️ Favorites Management
+- **Save Content**: Add movies and series to your favorites list
+- **Quick Access**: Easily access your saved content from the Favorites screen
+- **Organize**: Remove items from favorites with individual delete options
+- **Bulk Actions**: Clear all favorites with a single action
+
 ### 🎨 Personalization
 - **Theme Customization**: Light, dark, and system themes with color options
 - **Subtitle Settings**: Customize subtitle appearance (background, text color, border, size)
 - **Responsive UI**: Material Design 3 interface that adapts to all screen sizes
 
 ### 📱 User Experience
-- **Intuitive Navigation**: Bottom navigation for easy access to all sections
+- **Intuitive Navigation**: Bottom navigation for mobile/tablet and sidebar navigation for TV
 - **Error Handling**: Retry mechanisms for failed requests
 - **Loading States**: Shimmer loading animations for smooth user experience
 - **Season & Episode Management**: Easy navigation through TV series seasons and episodes
+
+### 📺 Android TV Support
+- **Optimized Layout**: Sidebar navigation for better TV experience
+- **Full Screen Support**: Content fills the entire TV screen
+- **Remote Control Navigation**: D-pad optimized navigation
+- **Cross-Platform Compatibility**: Works on mobile, tablet, and TV with adaptive UI
 
 ## 🛠️ Tech Stack
 
@@ -42,6 +54,7 @@ CCloud is a modern Android streaming application built with Jetpack Compose and 
 - **ViewModel & LiveData** - For state management
 - **Coroutines** - For asynchronous operations
 - **OkHttp** - For network requests
+- **Leanback** - Android TV support library
 
 ## 🏗️ Architecture
 
@@ -91,16 +104,27 @@ app/
 ├── src/
 │   ├── main/
 │   │   ├── java/com/pira/ccloud/
-│   │   │   ├── data/           # Data models and repositories
-│   │   │   ├── navigation/     # Navigation graph
-│   │   │   ├── screens/        # Compose screens
-│   │   │   ├── ui/             # Theme and UI components
-│   │   │   ├── utils/          # Utility classes
-│   │   │   ├── MainActivity.kt
-│   │   │   └── VideoPlayerActivity.kt
-│   │   └── res/                # Resources
-│   └── test/                   # Unit tests
-├── build.gradle.kts            # App build configuration
+│   │   │   ├── components/           # Reusable UI components
+│   │   │   ├── data/                 # Data layer
+│   │   │   │   ├── model/            # Data models (Movie, Series, etc.)
+│   │   │   │   └── repository/       # Data repositories
+│   │   │   ├── navigation/           # Navigation graph and components
+│   │   │   ├── screens/              # Compose screens
+│   │   │   ├── ui/                   # UI components and theme
+│   │   │   │   ├── movies/           # Movie-specific UI components
+│   │   │   │   ├── search/           # Search-specific UI components
+│   │   │   │   ├── series/           # Series-specific UI components
+│   │   │   │   └── theme/            # Theme definitions and management
+│   │   │   ├── utils/                # Utility classes
+│   │   │   ├── MainActivity.kt       # Main application activity
+│   │   │   └── VideoPlayerActivity.kt # Video player activity
+│   │   └── res/                      # Resources
+│   │       ├── drawable/             # Drawable resources
+│   │       ├── values/               # Default resources
+│   │       ├── values-television/    # TV-specific resources
+│   │       └── ...                   # Other resources
+│   └── test/                         # Unit tests
+├── build.gradle.kts                  # App build configuration
 └── ...
 ```
 
@@ -138,6 +162,13 @@ Users can customize their experience through the settings screen:
 - Pull-to-refresh and infinite scrolling
 - Error handling with retry option
 
+### ❤️ Favorites Screen
+- View all saved movies and series in one place
+- Individual item deletion
+- Bulk deletion of all favorites
+- Direct navigation to content details
+- Visual indicators for content type and ratings
+
 ### 🔍 Search Screen
 - Real-time search across movies and series
 - Instant results as you type
@@ -149,6 +180,7 @@ Users can customize their experience through the settings screen:
 - Multiple quality options for playback
 - Download options (Browser, ADM, VLC)
 - Custom video player integration
+- Add/remove from favorites
 
 ### 📺 Single Series Screen
 - Comprehensive series details
@@ -156,6 +188,7 @@ Users can customize their experience through the settings screen:
 - Multiple quality options per episode
 - Download options for each episode
 - Error handling with retry functionality
+- Add/remove from favorites
 
 ### ⚙️ Settings Screen
 - Theme customization (Light/Dark/System)
@@ -163,12 +196,57 @@ Users can customize their experience through the settings screen:
 - Subtitle settings (colors and text size)
 - Reset to default options
 
-### 🏠 Bottom Navigation
-The app uses a bottom navigation bar to switch between:
-- Movies screen
-- Series screen
-- Search screen
-- Settings screen
+### 🏠 Navigation
+The app uses adaptive navigation:
+- **Mobile/Tablet**: Bottom navigation bar for switching between screens
+- **TV**: Sidebar navigation for better remote control experience
+
+## 📺 Android TV Remote Control Guide
+
+### Navigation Controls
+- **D-Pad (Arrow Keys)**: Navigate between UI elements, scroll through lists, and move focus
+- **Select (OK) Button**: Confirm selections, open items, play/pause media
+- **Back Button**: Navigate to previous screen or exit the app
+- **Home Button**: Return to the main launcher
+
+### Sidebar Navigation (TV Only)
+- Use the **Up/Down** arrow keys to navigate between menu items in the sidebar
+- Press **Select (OK)** to open the selected section (Movies, Series, Search, Settings)
+
+### Content Browsing
+- Use **Left/Right** arrow keys to navigate between items in a row
+- Use **Up/Down** arrow keys to move between rows
+- Press **Select (OK)** to open details for a selected movie or series
+
+### Media Playback Controls
+- **Play/Pause**: Press the **Select (OK)** button or **Play/Pause** button when focused on the player
+- **Seek Forward/Backward**: Use the **Left/Right** arrow keys to skip 10 seconds
+- **Volume Control**: Use the **Up/Down** arrow keys on the directional pad or volume buttons on the remote
+- **Exit Fullscreen**: Press the **Back** button to exit fullscreen mode and return to the content details
+
+### Search Functionality (TV)
+- Navigate to the Search section using the sidebar
+- The on-screen keyboard can be controlled with the D-pad
+- **Up/Down/Left/Right**: Move between keyboard keys
+- **Select (OK)**: Press the selected key
+- **Backspace**: Press the back button to delete characters
+
+### Settings Navigation (TV)
+- In the Settings screen, use **Up/Down** to navigate between options
+- For toggle switches, press **Select (OK)** to toggle on/off
+- For color pickers and other options, press **Select (OK)** to open the selection dialog
+
+### Favorites Management (TV)
+- Access the Favorites screen through the Settings menu
+- Navigate through saved items using the D-pad
+- Press **Select (OK)** to open a saved item
+- Use the context menu to remove individual items or clear all favorites
+
+### General Tips for TV Navigation
+1. **Focus Highlighting**: The currently selected item is highlighted with a border or background color
+2. **Smooth Scrolling**: Content lists support smooth scrolling with the D-pad
+3. **Quick Access**: The sidebar is always accessible for quick navigation between main sections
+4. **Exit App**: Press the **Back** button repeatedly until you exit the app
 
 ## 🤝 Contributing
 
@@ -191,6 +269,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ExoPlayer](https://exoplayer.dev/) for media playback
 - [Coil](https://coil-kt.github.io/coil/) for image loading
 - [Material Design](https://m3.material.io/) for UI components
+- [Leanback](https://developer.android.com/training/tv/start/start) for TV support
 
 ## 📞 Contact
 

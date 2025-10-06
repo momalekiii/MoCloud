@@ -63,7 +63,10 @@ import androidx.media3.ui.PlayerView
 import com.pira.ccloud.data.model.SubtitleSettings
 import com.pira.ccloud.data.model.VideoPlayerSettings
 import com.pira.ccloud.utils.StorageUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // Extension function to set subtitle text size on PlayerView
 fun PlayerView.setSubtitleTextSize(spSize: Float) {
@@ -195,6 +198,7 @@ fun VideoPlayerScreen(
     var playerError by remember { mutableStateOf<String?>(null) }
     var showForwardIndicator by remember { mutableStateOf(false) }
     var showRewindIndicator by remember { mutableStateOf(false) }
+    var wasPlayingBeforeSeek by remember { mutableStateOf(false) } // Track if player was playing before seeking
     
     // Load video player settings
     val videoPlayerSettings = remember(context) {
@@ -241,7 +245,10 @@ fun VideoPlayerScreen(
     val playerListener = remember(exoPlayer) {
         object : Player.Listener {
             override fun onIsPlayingChanged(playing: Boolean) {
-                isPlaying = playing
+                // Only update isPlaying if we're not currently seeking
+                if (!isSeeking) {
+                    isPlaying = playing
+                }
             }
             
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -360,6 +367,10 @@ fun VideoPlayerScreen(
                         val screenWidth = size.width
                         val tapX = offset.x
                         
+                        // Store the playing state before seeking
+                        wasPlayingBeforeSeek = isPlaying
+                        isSeeking = true
+                        
                         if (tapX < screenWidth / 2) {
                             // Left side - rewind specified seconds
                             try {
@@ -369,6 +380,10 @@ fun VideoPlayerScreen(
                                     player.seekTo(newPosition)
                                     currentPosition = newPosition
                                     showRewindIndicator = true
+                                    // Keep the player playing during seeking if it was playing before
+                                    if (wasPlayingBeforeSeek) {
+                                        player.playWhenReady = true
+                                    }
                                 }
                             } catch (e: Exception) {
                                 // Ignore seek errors
@@ -382,9 +397,27 @@ fun VideoPlayerScreen(
                                     player.seekTo(newPosition)
                                     currentPosition = newPosition
                                     showForwardIndicator = true
+                                    // Keep the player playing during seeking if it was playing before
+                                    if (wasPlayingBeforeSeek) {
+                                        player.playWhenReady = true
+                                    }
                                 }
                             } catch (e: Exception) {
                                 // Ignore seek errors
+                            }
+                        }
+                        
+                        // Reset seeking state after a short delay using a coroutine scope
+                        CoroutineScope(Dispatchers.Main).launch {
+                            delay(500) // Reset after 500ms
+                            isSeeking = false
+                            // Restore the playing state after seeking is finished
+                            try {
+                                exoPlayer?.playWhenReady = wasPlayingBeforeSeek
+                                // Update isPlaying state to match the player's actual state
+                                isPlaying = wasPlayingBeforeSeek
+                            } catch (e: Exception) {
+                                // Ignore errors
                             }
                         }
                     },
@@ -574,17 +607,33 @@ fun VideoPlayerScreen(
                     Slider(
                         value = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f,
                         onValueChange = { progress ->
+                            // Store the playing state before seeking
+                            if (!isSeeking) {
+                                wasPlayingBeforeSeek = isPlaying
+                            }
                             isSeeking = true
                             val newPosition = (progress * duration).toLong()
                             try {
                                 exoPlayer?.seekTo(newPosition)
                                 currentPosition = newPosition
+                                // Keep the player playing during seeking if it was playing before
+                                if (wasPlayingBeforeSeek) {
+                                    exoPlayer?.playWhenReady = true
+                                }
                             } catch (e: Exception) {
                                 // Ignore seek errors
                             }
                         },
                         onValueChangeFinished = {
                             isSeeking = false
+                            // Restore the playing state after seeking is finished
+                            try {
+                                exoPlayer?.playWhenReady = wasPlayingBeforeSeek
+                                // Update isPlaying state to match the player's actual state
+                                isPlaying = wasPlayingBeforeSeek
+                            } catch (e: Exception) {
+                                // Ignore errors
+                            }
                         },
                         modifier = Modifier.fillMaxWidth()
                     )

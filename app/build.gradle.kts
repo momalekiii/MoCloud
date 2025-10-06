@@ -68,6 +68,15 @@ android {
     buildFeatures {
         compose = true
     }
+    
+    // Add support for different screen sizes including TV
+    sourceSets {
+        getByName("main") {
+            res {
+                srcDirs("src/main/res", "src/main/res/values-television")
+            }
+        }
+    }
 }
 
 dependencies {
@@ -101,6 +110,10 @@ dependencies {
     
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    
+    // Leanback for TV support
+    implementation(libs.androidx.leanback)
+    implementation(libs.androidx.leanback.preference)
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

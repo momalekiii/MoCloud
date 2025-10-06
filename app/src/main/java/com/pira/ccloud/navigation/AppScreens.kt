@@ -14,7 +14,8 @@ sealed class AppScreens(
     val route: String,
     @StringRes val resourceId: Int,
     val icon: ImageVector? = null,
-    val showBottomBar: Boolean = true
+    val showBottomBar: Boolean = true,
+    val showSidebar: Boolean = true
 ) {
     data object Splash : AppScreens(
         route = "splash",
@@ -49,27 +50,31 @@ sealed class AppScreens(
         route = "single_movie/{movieId}",
         resourceId = R.string.movie_details,
         icon = Icons.Default.Movie,
-        showBottomBar = false
+        showBottomBar = false,
+        showSidebar = false
     )
     
     data object SingleSeries : AppScreens(
         route = "single_series/{seriesId}",
         resourceId = R.string.series_details,
         icon = Icons.Default.Tv,
-        showBottomBar = false
+        showBottomBar = false,
+        showSidebar = false
     )
 
     data object Favorites : AppScreens(
         route = "favorites",
         resourceId = R.string.favorites,
-        showBottomBar = false
+        showBottomBar = false,
+        showSidebar = false
     )
 
     data object About : AppScreens(
         route = "about",
         resourceId = R.string.about,
         icon = Icons.Default.Info,
-        showBottomBar = false
+        showBottomBar = false,
+        showSidebar = false
     )
 
     companion object {
