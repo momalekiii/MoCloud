@@ -20,7 +20,10 @@ cd gradle\wrapper
 for /f "tokens=*" %%a in ('certutil -hashfile gradle-wrapper.jar SHA256 ^| findstr /v "hash"') do set COMPUTED_CHECKSUM=%%a
 set /p STORED_CHECKSUM=<gradle-wrapper.jar.sha256
 
-if "%COMPUTED_CHECKSUM%"=="%STORED_CHECKSUM: =%" (
+REM Remove any trailing spaces from the stored checksum
+for /f "tokens=*" %%b in ("%STORED_CHECKSUM%") do set STORED_CHECKSUM=%%b
+
+if "%COMPUTED_CHECKSUM%"=="%STORED_CHECKSUM%" (
     echo ✓ Gradle wrapper checksum verification PASSED
     echo Checksum: %STORED_CHECKSUM%
     exit /b 0
