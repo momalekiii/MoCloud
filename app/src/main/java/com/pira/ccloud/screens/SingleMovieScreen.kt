@@ -456,7 +456,9 @@ fun SourceOptionsDialog(
             onCopyLink = { DownloadUtils.copyToClipboard(context, source.url) },
             onDownloadWithBrowser = { DownloadUtils.openUrl(context, source.url) },
             onDownloadWithADM = { DownloadUtils.openWithADM(context, source.url) },
-            onOpenInVLC = { DownloadUtils.openWithVLC(context, source.url) }
+            onOpenInVLC = { DownloadUtils.openWithVLC(context, source.url) },
+            onOpenInMXPlayer = { DownloadUtils.openWithMXPlayer(context, source.url) },
+            onOpenInKMPlayer = { DownloadUtils.openWithKMPlayer(context, source.url) }
         )
     }
     

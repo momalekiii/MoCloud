@@ -200,7 +200,9 @@ fun SourceOptionsDialog(
             onCopyLink = { DownloadUtils.copyToClipboard(context, selectedSource!!.url) },
             onDownloadWithBrowser = { DownloadUtils.openUrl(context, selectedSource!!.url) },
             onDownloadWithADM = { DownloadUtils.openWithADM(context, selectedSource!!.url) },
-            onOpenInVLC = { DownloadUtils.openWithVLC(context, selectedSource!!.url) }
+            onOpenInVLC = { DownloadUtils.openWithVLC(context, selectedSource!!.url) },
+            onOpenInMXPlayer = { DownloadUtils.openWithMXPlayer(context, selectedSource!!.url) },
+            onOpenInKMPlayer = { DownloadUtils.openWithKMPlayer(context, selectedSource!!.url) }
         )
     }
     
@@ -290,7 +292,9 @@ fun DownloadMenu(
             onCopyLink = { DownloadUtils.copyToClipboard(context, selectedSource!!.url) },
             onDownloadWithBrowser = { DownloadUtils.openUrl(context, selectedSource!!.url) },
             onDownloadWithADM = { DownloadUtils.openWithADM(context, selectedSource!!.url) },
-            onOpenInVLC = { DownloadUtils.openWithVLC(context, selectedSource!!.url) }
+            onOpenInVLC = { DownloadUtils.openWithVLC(context, selectedSource!!.url) },
+            onOpenInMXPlayer = { DownloadUtils.openWithMXPlayer(context, selectedSource!!.url) },
+            onOpenInKMPlayer = { DownloadUtils.openWithKMPlayer(context, selectedSource!!.url) }
         )
     }
     

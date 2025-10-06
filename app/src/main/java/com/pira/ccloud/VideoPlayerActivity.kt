@@ -437,11 +437,31 @@ fun VideoPlayerScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = playerError ?: "Unknown error occurred",
-                    color = Color.Red,
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(16.dp)
-                )
+                ) {
+                    Text(
+                        text = playerError ?: "Unknown error occurred",
+                        color = Color.Red,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = Color.Black.copy(alpha = 0.7f),
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                }
             }
             return@Box
         }

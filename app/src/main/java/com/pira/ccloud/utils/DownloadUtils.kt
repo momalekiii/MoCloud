@@ -11,7 +11,8 @@ object DownloadUtils {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             context.startActivity(intent)
         } catch (e: Exception) {
-            // Handle error or show a message
+            // Show error message when URL cannot be opened
+            android.widget.Toast.makeText(context, "Unable to open URL: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
@@ -58,13 +59,13 @@ object DownloadUtils {
                 }
             }
             
-            // If all else fails, fallback to browser
+            // If all else fails, show error message
             if (!success) {
-                openUrl(context, url)
+                android.widget.Toast.makeText(context, "ADM is not installed on this device", android.widget.Toast.LENGTH_LONG).show()
             }
         } catch (e: Exception) {
-            // If ADM is not installed, fallback to browser
-            openUrl(context, url)
+            // If ADM is not installed, show error message
+            android.widget.Toast.makeText(context, "ADM is not installed on this device", android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
@@ -77,6 +78,38 @@ object DownloadUtils {
         } catch (e: Exception) {
             // If VLC is not installed, show a message
             android.widget.Toast.makeText(context, "VLC Player not installed", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    fun openWithMXPlayer(context: Context, url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.setDataAndType(Uri.parse(url), "video/*")
+            intent.setPackage("com.mxtech.videoplayer.ad") // MX Player Free
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            try {
+                // Try pro version
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.setDataAndType(Uri.parse(url), "video/*")
+                intent.setPackage("com.mxtech.videoplayer.pro") // MX Player Pro
+                context.startActivity(intent)
+            } catch (e2: Exception) {
+                // If MX Player is not installed, show a message
+                android.widget.Toast.makeText(context, "MX Player not installed", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    fun openWithKMPlayer(context: Context, url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.setDataAndType(Uri.parse(url), "video/*")
+            intent.setPackage("com.kmplayer") // KM Player
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            // If KM Player is not installed, show a message
+            android.widget.Toast.makeText(context, "KM Player not installed", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 }

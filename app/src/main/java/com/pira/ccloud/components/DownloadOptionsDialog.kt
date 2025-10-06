@@ -21,7 +21,9 @@ fun DownloadOptionsDialog(
     onCopyLink: () -> Unit,
     onDownloadWithBrowser: () -> Unit,
     onDownloadWithADM: () -> Unit,
-    onOpenInVLC: () -> Unit
+    onOpenInVLC: () -> Unit,
+    onOpenInMXPlayer: () -> Unit,
+    onOpenInKMPlayer: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -102,6 +104,36 @@ fun DownloadOptionsDialog(
                     )
                 ) {
                     Text("Open in VLC Player")
+                }
+                
+                Button(
+                    onClick = {
+                        onOpenInMXPlayer()
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Text("Open in MX Player")
+                }
+                
+                Button(
+                    onClick = {
+                        onOpenInKMPlayer()
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Text("Open in KM Player")
                 }
                 
                 TextButton(
