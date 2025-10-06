@@ -27,6 +27,10 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Make gradlew executable
+        run: |
+          chmod +x gradlew
+
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v2
         continue-on-error: true
@@ -59,7 +63,6 @@ jobs:
 
       - name: Build APK
         run: |
-          chmod +x ./gradlew
           ./gradlew assembleRelease --stacktrace
 
       - name: Rename APK
