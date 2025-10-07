@@ -138,6 +138,42 @@ class VideoPlayerActivity : ComponentActivity() {
         }
     }
     
+    // Handle TV remote control key events
+    override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent?): Boolean {
+        exoPlayer?.let { player ->
+            when (keyCode) {
+                android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+                android.view.KeyEvent.KEYCODE_DPAD_CENTER -> {
+                    player.playWhenReady = !player.playWhenReady
+                    return true
+                }
+                android.view.KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                    player.playWhenReady = true
+                    return true
+                }
+                android.view.KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                    player.playWhenReady = false
+                    return true
+                }
+                android.view.KeyEvent.KEYCODE_DPAD_LEFT -> {
+                    val newPosition = (player.currentPosition - 10000).coerceAtLeast(0L) // Rewind 10 seconds
+                    player.seekTo(newPosition)
+                    return true
+                }
+                android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    val newPosition = (player.currentPosition + 10000).coerceAtMost(player.duration) // Forward 10 seconds
+                    player.seekTo(newPosition)
+                    return true
+                }
+                android.view.KeyEvent.KEYCODE_BACK -> {
+                    finish()
+                    return true
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+    
     private fun enableFullScreenMode() {
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {

@@ -107,7 +107,7 @@ On Unix/Linux/macOS:
 ```
 
 On Windows:
-```cmd
+``cmd
 scripts\fix-gradle-wrapper.bat
 ```
 
@@ -251,6 +251,14 @@ The app uses adaptive navigation:
 - **Seek Forward/Backward**: Use the **Left/Right** arrow keys to skip 10 seconds
 - **Volume Control**: Use the **Up/Down** arrow keys on the directional pad or volume buttons on the remote
 - **Exit Fullscreen**: Press the **Back** button to exit fullscreen mode and return to the content details
+
+### Video Player Remote Controls (TV)
+When watching videos on Android TV, you can control playback using your remote control:
+
+- **Play/Pause**: Press the **Select (OK)** button or **Play/Pause** media button
+- **Fast Forward**: Press the **Right Arrow** key to skip forward 10 seconds
+- **Rewind**: Press the **Left Arrow** key to skip backward 10 seconds
+- **Exit Player**: Press the **Back** button to exit the video player and return to the content details
 
 ### Search Functionality (TV)
 - Navigate to the Search section using the sidebar
