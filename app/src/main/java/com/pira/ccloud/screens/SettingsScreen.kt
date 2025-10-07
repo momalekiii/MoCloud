@@ -519,7 +519,7 @@ fun SettingsScreen(
                                     onValueChange = { size ->
                                         updateSubtitleSettings(subtitleSettings.copy(textSize = size))
                                     },
-                                    valueRange = 10f..30f,
+                                    valueRange = 10f..50f,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }

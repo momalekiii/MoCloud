@@ -29,12 +29,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Forward
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,9 +53,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
@@ -199,8 +205,15 @@ fun VideoPlayerScreen(
     var showForwardIndicator by remember { mutableStateOf(false) }
     var showRewindIndicator by remember { mutableStateOf(false) }
     var wasPlayingBeforeSeek by remember { mutableStateOf(false) } // Track if player was playing before seeking
+    var playbackSpeed by remember { mutableStateOf(1.0f) } // Current playback speed (not saved to storage)
+    var showSpeedDropdown by remember { mutableStateOf(false) } // For showing speed selection dropdown
     
-    // Load video player settings
+    // Predefined playback speed options
+    val speedOptions = remember {
+        listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.5f, 3.0f, 3.5f)
+    }
+    
+    // Load video player settings (without affecting playback speed)
     val videoPlayerSettings = remember(context) {
         StorageUtils.loadVideoPlayerSettings(context)
     }
@@ -216,6 +229,8 @@ fun VideoPlayerScreen(
                 setMediaItem(MediaItem.fromUri(Uri.parse(videoUrl)))
                 prepare()
                 playWhenReady = isPlaying
+                // Set initial playback speed
+                setPlaybackSpeed(playbackSpeed)
             }
         } catch (e: Exception) {
             playerError = "Failed to initialize player: ${e.message}"
@@ -238,6 +253,15 @@ fun VideoPlayerScreen(
             exoPlayer?.playWhenReady = isPlaying
         } catch (e: Exception) {
             // Ignore player state errors
+        }
+    }
+    
+    // Update playback speed when it changes
+    LaunchedEffect(playbackSpeed, exoPlayer) {
+        try {
+            exoPlayer?.setPlaybackSpeed(playbackSpeed)
+        } catch (e: Exception) {
+            // Ignore playback speed errors
         }
     }
     
@@ -362,7 +386,7 @@ fun VideoPlayerScreen(
             .background(Color.Black)
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onDoubleTap = { offset ->
+                    onDoubleTap = { offset -> 
                         // Calculate if the tap is on the left or right side
                         val screenWidth = size.width
                         val tapX = offset.x
@@ -670,6 +694,73 @@ fun VideoPlayerScreen(
                         )
                         
                         Spacer(modifier = Modifier.weight(1f))
+                        
+                        // Video speed controls
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.Black.copy(alpha = 0.6f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Box {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .clickable { showSpeedDropdown = true }
+                                        .padding(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Speed,
+                                        contentDescription = "Playback speed",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    
+                                    Text(
+                                        text = String.format("%.2fx", playbackSpeed),
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 4.dp)
+                                    )
+                                }
+                                
+                                DropdownMenu(
+                                    expanded = showSpeedDropdown,
+                                    onDismissRequest = { showSpeedDropdown = false },
+                                    modifier = Modifier.background(Color.Black)
+                                ) {
+                                    speedOptions.forEach { speed ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = String.format("%.2fx", speed),
+                                                    color = if (speed == playbackSpeed) MaterialTheme.colorScheme.primary else Color.White
+                                                )
+                                            },
+                                            onClick = {
+                                                playbackSpeed = speed
+                                                showSpeedDropdown = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.width(4.dp))
+                            
+                            // Normal speed button
+                            Text(
+                                text = "Normal",
+                                color = if (playbackSpeed == 1.0f) MaterialTheme.colorScheme.primary else Color.White,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = if (playbackSpeed == 1.0f) FontWeight.Bold else FontWeight.Normal,
+                                modifier = Modifier
+                                    .clickable { playbackSpeed = 1.0f }
+                                    .padding(4.dp)
+                            )
+                        }
                         
                         Text(
                             text = formatTime(duration),

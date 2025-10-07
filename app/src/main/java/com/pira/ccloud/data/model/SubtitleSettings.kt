@@ -7,10 +7,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class SubtitleSettings(
-    val backgroundColor: Int = Color.BLACK,
+    val backgroundColor: Int = Color.TRANSPARENT,
     val textColor: Int = Color.YELLOW,
-    val borderColor: Int = Color.TRANSPARENT,
-    val textSize: Float = 16f
+    val borderColor: Int = Color.BLACK,
+    val textSize: Float = 17f
 ) {
     companion object {
         // Default subtitle settings
