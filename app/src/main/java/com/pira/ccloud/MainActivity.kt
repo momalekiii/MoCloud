@@ -1,6 +1,7 @@
 package com.pira.ccloud
 
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -56,7 +57,12 @@ class MainActivity : ComponentActivity() {
         if (!DeviceUtils.isTv(this)) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
-        enableEdgeToEdge()
+        
+        // Only use edge-to-edge on supported versions
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            enableEdgeToEdge()
+        }
+        
         setContent {
             MainApp()
         }

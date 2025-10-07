@@ -14,7 +14,9 @@ android {
 
     defaultConfig {
         applicationId = "com.pira.ccloud"
-        minSdk = 24
+        // Supported Android versions: Android 8.0 (API 26) and higher
+        // Android 7.x and below are not supported due to Jetpack Compose limitations
+        minSdk = 26
         targetSdk = 36
         versionCode = 8
         versionName = "1.0.7"

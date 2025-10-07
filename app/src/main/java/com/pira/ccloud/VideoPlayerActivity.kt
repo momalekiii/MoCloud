@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -176,14 +177,14 @@ class VideoPlayerActivity : ComponentActivity() {
     
     private fun enableFullScreenMode() {
         try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 // For Android 11 and above
                 window.insetsController?.let { controller ->
                     controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
                     controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 }
-            } else {
-                // For older Android versions
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                // For Android 4.4 to Android 10
                 @Suppress("DEPRECATION")
                 window.decorView.systemUiVisibility = (
                     View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -193,6 +194,10 @@ class VideoPlayerActivity : ComponentActivity() {
                     or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                     or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 )
+            } else {
+                // For even older versions
+                @Suppress("DEPRECATION")
+                window.addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN)
             }
         } catch (e: Exception) {
             // Fallback to basic fullscreen if there's an issue
