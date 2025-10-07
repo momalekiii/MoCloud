@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.NavGraph.Companion.findStartDestination
 
 @Composable
 fun SidebarNavigation(navController: NavController) {
@@ -129,6 +130,10 @@ fun SidebarNavigation(navController: NavController) {
                                     launchSingleTop = true
                                     // Restore state when reselecting a previously selected item
                                     restoreState = true
+                                    // Pop up to the current destination to avoid building up a large stack
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
                                 }
                             }
                         },

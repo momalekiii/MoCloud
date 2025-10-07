@@ -1,6 +1,8 @@
 package com.pira.ccloud.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +16,9 @@ import com.pira.ccloud.screens.SingleMovieScreen
 import com.pira.ccloud.screens.SingleSeriesScreen
 import com.pira.ccloud.screens.SplashScreen
 import com.pira.ccloud.screens.FavoritesScreen
+import com.pira.ccloud.ui.movies.MoviesViewModel
+import com.pira.ccloud.ui.search.SearchViewModel
+import com.pira.ccloud.ui.series.SeriesViewModel
 import com.pira.ccloud.ui.theme.ThemeSettings
 import com.pira.ccloud.ui.theme.ThemeManager
 import androidx.compose.ui.platform.LocalContext
@@ -26,6 +31,11 @@ fun AppNavigation(
     val context = LocalContext.current
     val themeManager = ThemeManager(context)
     val themeSettings = themeManager.loadThemeSettings()
+    
+    // Create ViewModels here to preserve their state across navigation
+    val moviesViewModel = viewModel<MoviesViewModel>()
+    val seriesViewModel = viewModel<SeriesViewModel>()
+    val searchViewModel = viewModel<SearchViewModel>()
     
     NavHost(
         navController = navController,
@@ -49,13 +59,13 @@ fun AppNavigation(
         }
         
         composable(route = AppScreens.Movies.route) {
-            MoviesScreen(navController = navController)
+            MoviesScreen(viewModel = moviesViewModel, navController = navController)
         }
         composable(route = AppScreens.Series.route) {
-            SeriesScreen(navController = navController)
+            SeriesScreen(viewModel = seriesViewModel, navController = navController)
         }
         composable(route = AppScreens.Search.route) {
-            SearchScreen(navController = navController)
+            SearchScreen(viewModel = searchViewModel, navController = navController)
         }
         composable(route = AppScreens.Settings.route) {
             SettingsScreen(onThemeSettingsChanged, navController)
