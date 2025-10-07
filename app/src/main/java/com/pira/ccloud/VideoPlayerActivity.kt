@@ -232,7 +232,7 @@ fun VideoPlayerScreen(
     onPlayerReady: (ExoPlayer) -> Unit
 ) {
     val context = LocalContext.current
-    var isPlaying by remember { mutableStateOf(false) }
+    var isPlaying by remember { mutableStateOf(true) }
     var currentPosition by remember { mutableStateOf(0L) }
     var duration by remember { mutableStateOf(0L) }
     var showControls by remember { mutableStateOf(true) }
@@ -264,7 +264,7 @@ fun VideoPlayerScreen(
             ExoPlayer.Builder(context).build().apply {
                 setMediaItem(MediaItem.fromUri(Uri.parse(videoUrl)))
                 prepare()
-                playWhenReady = isPlaying
+                playWhenReady = true // Start playing by default
                 // Set initial playback speed
                 setPlaybackSpeed(playbackSpeed)
             }
