@@ -121,18 +121,15 @@ fun SidebarNavigation(navController: NavController) {
                         label = null, // We're using custom label in icon
                         selected = isSelected,
                         onClick = {
-                            navController.navigate(screen.route) {
-                                // Pop up to the start destination of the graph to
-                                // avoid building up a large stack of destinations
-                                // on the back stack as users select items
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true
+                            // Only navigate if we're not already on the selected screen
+                            if (currentRoute != screen.route) {
+                                navController.navigate(screen.route) {
+                                    // Avoid multiple copies of the same destination when
+                                    // reselecting the same item
+                                    launchSingleTop = true
+                                    // Restore state when reselecting a previously selected item
+                                    restoreState = true
                                 }
-                                // Avoid multiple copies of the same destination when
-                                // reselecting the same item
-                                launchSingleTop = true
-                                // Restore state when reselecting a previously selected item
-                                restoreState = true
                             }
                         },
                         colors = NavigationRailItemDefaults.colors(

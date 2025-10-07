@@ -241,11 +241,11 @@ fun getArchitecture(): String {
         val supportedAbis = android.os.Build.SUPPORTED_ABIS
         if (supportedAbis.isNotEmpty()) {
             when (supportedAbis[0]) {
-                "arm64-v8a" -> "ARM64"
-                "armeabi-v7a" -> "ARM32"
+                "arm64-v8a" -> "ARM64 (arm64-v8a)"
+                "armeabi-v7a" -> "ARM32 (armeabi-v7a)"
                 "x86_64" -> "x86_64"
                 "x86" -> "x86"
-                else -> supportedAbis[0]
+                else -> "${supportedAbis[0]} (Unknown)"
             }
         } else {
             "Unknown"

@@ -35,7 +35,10 @@ fun AppNavigation(
             SplashScreen(
                 onTimeout = {
                     navController.popBackStack()
-                    navController.navigate(AppScreens.Movies.route)
+                    navController.navigate(AppScreens.Movies.route) {
+                        // Prevent re-adding splash to back stack
+                        launchSingleTop = true
+                    }
                 },
                 backgroundColor = if (themeSettings.themeMode == com.pira.ccloud.ui.theme.ThemeMode.DARK) {
                     androidx.compose.ui.graphics.Color(0xFF121212)
