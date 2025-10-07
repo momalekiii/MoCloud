@@ -270,7 +270,11 @@ When watching videos on Android TV, you can control playback using your remote c
 ### Settings Navigation (TV)
 - In the Settings screen, use **Up/Down** to navigate between options
 - For toggle switches, press **Select (OK)** to toggle on/off
-- For color pickers and other options, press **Select (OK)** to open the selection dialog
+- For expandable sections (Theme Settings, Video Player Settings), press **Select (OK)** to expand/collapse
+- Use **Left/Right** arrow keys on slider controls to adjust values
+- Press **Select (OK)** on color options to select a color
+- For dialog-based options (Reset to Defaults, Check for Updates), press **Select (OK)** to open the dialog
+- All settings options can be controlled using either the D-pad or mouse pad
 
 ### Favorites Management (TV)
 - Access the Favorites screen through the Settings menu
