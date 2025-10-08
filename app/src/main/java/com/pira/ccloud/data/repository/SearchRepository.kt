@@ -15,14 +15,8 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
-class SearchRepository {
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .build()
-    
+class SearchRepository : BaseRepository() {
     private val BASE_URL = "https://hostinnegar.com/api/search"
-    private val API_KEY = "4F5A9C3D9A86FA54EACEDDD635185"
     
     suspend fun search(query: String): SearchResult {
         return withContext(Dispatchers.IO) {
@@ -30,20 +24,10 @@ class SearchRepository {
                 // Properly encode the query for URL paths
                 val encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString()).replace("+", "%20")
                 val url = "$BASE_URL/$encodedQuery/$API_KEY/"
-                val request = Request.Builder()
-                    .url(url)
-                    .build()
                 
-                client.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) {
-                        throw Exception("Failed to search: ${response.code}")
-                    }
-                    
-                    val jsonData = response.body?.string()
-                        ?: throw Exception("Empty response body")
-                    
-                    parseSearchResult(jsonData)
-                }
+                val jsonData = executeRequest(url) { Request.Builder().url(it).build() }
+                
+                parseSearchResult(jsonData)
             } catch (e: Exception) {
                 throw Exception("Error searching: ${e.message}")
             }

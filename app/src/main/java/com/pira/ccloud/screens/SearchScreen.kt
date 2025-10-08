@@ -277,6 +277,7 @@ fun PosterItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(310.dp) // Fixed height for all cards
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -286,29 +287,93 @@ fun PosterItem(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(12.dp)
         ) {
-            // Poster image
-            Image(
-                painter = rememberAsyncImagePainter(
-                    ImageRequest.Builder(LocalContext.current)
-                        .data(poster.image)
-                        .crossfade(true)
-                        .build()
-                ),
-                contentDescription = poster.title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+            // Poster image with rating overlay
+            Box {
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        ImageRequest.Builder(LocalContext.current)
+                            .data(poster.image)
+                            .crossfade(true)
+                            .build()
+                    ),
+                    contentDescription = poster.title,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                
+                // Rating overlay at top-right corner
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp),
+                    shape = RoundedCornerShape(50.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Black.copy(alpha = 0.7f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Rating",
+                            tint = Color.Yellow,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = String.format("%.1f", poster.imdb),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+                
+                // Type indicator at bottom-right corner
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp),
+                    shape = RoundedCornerShape(50.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (poster.isMovie()) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.secondary
+                        }
+                    )
+                ) {
+                    Box(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = if (poster.isMovie()) "Movie" else "Series",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (poster.isMovie()) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSecondary
+                            },
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // Poster details
-            Column {
+            // Poster details with weight to fill remaining space
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
                     text = poster.title,
                     style = MaterialTheme.typography.titleMedium,
@@ -337,64 +402,6 @@ fun PosterItem(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Rating
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Rating",
-                        tint = Color.Yellow,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    
-                    Spacer(modifier = Modifier.width(4.dp))
-                    
-                    Text(
-                        text = String.format("%.1f", poster.imdb),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Type indicator
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (poster.isMovie()) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.secondary
-                            }
-                        ),
-                        shape = RoundedCornerShape(50.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = if (poster.isMovie()) "Movie" else "Series",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (poster.isMovie()) {
-                                    MaterialTheme.colorScheme.onPrimary
-                                } else {
-                                    MaterialTheme.colorScheme.onSecondary
-                                },
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
                 }
             }
         }

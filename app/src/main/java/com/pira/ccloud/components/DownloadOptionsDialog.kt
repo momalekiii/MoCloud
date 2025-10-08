@@ -29,14 +29,14 @@ fun DownloadOptionsDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Download Options",
+                text = "Download & Play Options",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
             )
         },
         text = {
             Text(
-                text = "Choose how to download this video",
+                text = "Choose how to handle this video",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -46,6 +46,14 @@ fun DownloadOptionsDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Download options
+                Text(
+                    text = "Download Options",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
                 Button(
                     onClick = {
                         onCopyLink()
@@ -91,6 +99,14 @@ fun DownloadOptionsDialog(
                     Text("Download with ADM")
                 }
                 
+                // Play options
+                Text(
+                    text = "Play Options",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
                 Button(
                     onClick = {
                         onOpenInVLC()
@@ -99,8 +115,8 @@ fun DownloadOptionsDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 ) {
                     Text("Open in VLC Player")
@@ -114,8 +130,8 @@ fun DownloadOptionsDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 ) {
                     Text("Open in MX Player")
@@ -129,8 +145,8 @@ fun DownloadOptionsDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 ) {
                     Text("Open in KM Player")

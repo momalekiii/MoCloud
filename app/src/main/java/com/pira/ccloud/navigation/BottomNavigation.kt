@@ -41,7 +41,7 @@ fun BottomNavigationBar(navController: NavController) {
         containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
         tonalElevation = 3.dp
     ) {
-        AppScreens.screens.forEach { screen ->
+        AppScreens.screens.filter { it.showBottomBar }.forEach { screen ->
             val isSelected = currentRoute == screen.route
             val scale by animateFloatAsState(
                 targetValue = if (isSelected) 1.1f else 1f,

@@ -370,6 +370,7 @@ fun SeriesItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(310.dp) // Fixed height for all cards
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -379,29 +380,63 @@ fun SeriesItem(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(12.dp)
         ) {
-            // Series poster
-            Image(
-                painter = rememberAsyncImagePainter(
-                    ImageRequest.Builder(LocalContext.current)
-                        .data(series.image)
-                        .crossfade(true)
-                        .build()
-                ),
-                contentDescription = series.title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+            // Series poster with rating overlay
+            Box {
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        ImageRequest.Builder(LocalContext.current)
+                            .data(series.image)
+                            .crossfade(true)
+                            .build()
+                    ),
+                    contentDescription = series.title,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                
+                // Rating overlay at top-right corner
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp),
+                    shape = RoundedCornerShape(50.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Black.copy(alpha = 0.7f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Rating",
+                            tint = Color.Yellow,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = String.format("%.1f", series.imdb),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // Series details
-            Column {
+            // Series details with weight to fill remaining space
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
                     text = series.title,
                     style = MaterialTheme.typography.titleMedium,
@@ -429,29 +464,6 @@ fun SeriesItem(
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Rating
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Rating",
-                        tint = Color.Yellow,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    
-                    Spacer(modifier = Modifier.width(4.dp))
-                    
-                    Text(
-                        text = String.format("%.1f", series.imdb),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }

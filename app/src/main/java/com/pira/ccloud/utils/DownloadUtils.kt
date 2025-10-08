@@ -102,14 +102,39 @@ object DownloadUtils {
     }
     
     fun openWithKMPlayer(context: Context, url: String) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.setDataAndType(Uri.parse(url), "video/*")
-            intent.setPackage("com.kmplayer") // KM Player
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            // If KM Player is not installed, show a message
-            android.widget.Toast.makeText(context, "KM Player not installed", android.widget.Toast.LENGTH_SHORT).show()
+        // Try multiple KM Player package names
+        val packages = arrayOf(
+            "com.kmplayer", // KM Player
+            "com.kmplayerpro",
+            "com.kmplayer.google",
+            "com.kmplayer.d"
+        )
+        
+        var success = false
+        for (pkg in packages) {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.setDataAndType(Uri.parse(url), "video/*")
+                intent.setPackage(pkg)
+                context.startActivity(intent)
+                success = true
+                break
+            } catch (e: Exception) {
+                // Try next package
+            }
+        }
+        
+        // If none of the specific packages work, try a general approach
+        if (!success) {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.setDataAndType(Uri.parse(url), "video/*")
+                context.startActivity(intent)
+                success = true
+            } catch (e: Exception) {
+                // If all else fails, show error message
+                android.widget.Toast.makeText(context, "KM Player not installed", android.widget.Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }

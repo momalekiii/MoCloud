@@ -12,33 +12,17 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
-class MovieRepository {
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .build()
-    
+class MovieRepository : BaseRepository() {
     private val BASE_URL = "https://hostinnegar.com/api/movie/by/filtres/0/created"
-    private val API_KEY = "4F5A9C3D9A86FA54EACEDDD635185"
     
     suspend fun getMovies(page: Int = 0): List<Movie> {
         return withContext(Dispatchers.IO) {
             try {
                 val url = "$BASE_URL/$page/$API_KEY"
-                val request = Request.Builder()
-                    .url(url)
-                    .build()
                 
-                client.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) {
-                        throw Exception("Failed to fetch movies: ${response.code}")
-                    }
-                    
-                    val jsonData = response.body?.string()
-                        ?: throw Exception("Empty response body")
-                    
-                    parseMovies(jsonData)
-                }
+                val jsonData = executeRequest(url) { Request.Builder().url(it).build() }
+                
+                parseMovies(jsonData)
             } catch (e: Exception) {
                 throw Exception("Error fetching movies: ${e.message}")
             }

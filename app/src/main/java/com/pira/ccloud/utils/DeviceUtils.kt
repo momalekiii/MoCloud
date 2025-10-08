@@ -40,7 +40,7 @@ object DeviceUtils {
         val isTv = resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK == Configuration.UI_MODE_TYPE_TELEVISION
         
         return when {
-            isTv -> 4 // More columns for TV screens
+            isTv -> 5 // More columns for TV screens
             screenWidthDp >= 600 -> 4 // Tablets
             else -> 2 // Phones
         }
