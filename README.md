@@ -69,16 +69,16 @@ The app follows a clean architecture pattern with the following components:
 
 ## 📱 Supported Android Versions
 
-CCloud supports Android 8.0 (API level 26) and higher. The app is optimized for:
+CCloud supports Android 9.0 (API level 28) and higher. The app is optimized for:
 
-- **Android 8.0 - 16** (API levels 26-36)
+- **Android 9.0 - 16** (API levels 28-36)
 - **Android TV** devices
 - **Tablets** and large-screen devices
 
 ### Compatibility Notes
 
-- **Android 7.x and below**: Not supported due to Jetpack Compose limitations
-- **Android 8.0+**: Full feature support with optimal performance
+- **Android 8.x and below**: Not supported due to Jetpack Compose limitations
+- **Android 9.0+**: Full feature support with optimal performance
 - **Android TV**: Specialized UI with remote control navigation
 
 ## Getting Started

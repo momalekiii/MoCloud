@@ -14,12 +14,12 @@ android {
 
     defaultConfig {
         applicationId = "com.pira.ccloud"
-        // Supported Android versions: Android 8.0 (API 26) and higher
-        // Android 7.x and below are not supported due to Jetpack Compose limitations
+        // Supported Android versions: Android 9.0 (API 28) and higher
+        // Android 8.x and below are not supported due to Jetpack Compose limitations
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "1.0.8"
+        versionCode = 10
+        versionName = "1.0.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
