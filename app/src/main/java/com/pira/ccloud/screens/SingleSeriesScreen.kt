@@ -580,13 +580,15 @@ fun SeriesDetailsContent(
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
-                                    .padding(horizontal = 16.dp)
+                                    .fillMaxSize()
+                                    .padding(horizontal = 12.dp)
                             ) {
                                 Text(
                                     text = genre.title,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1
                                 )
                             }
                         }

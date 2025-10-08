@@ -121,7 +121,7 @@ On Unix/Linux/macOS:
 ```
 
 On Windows:
-``cmd
+```cmd
 scripts\fix-gradle-wrapper.bat
 ```
 
