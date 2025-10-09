@@ -5,7 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pira.ccloud.data.model.Country
 import com.pira.ccloud.data.model.Poster
+import com.pira.ccloud.data.repository.CountryRepository
 import com.pira.ccloud.data.repository.SearchRepository
 import com.pira.ccloud.utils.LanguageUtils
 import kotlinx.coroutines.Job
@@ -14,11 +16,18 @@ import kotlinx.coroutines.launch
 
 class SearchViewModel : ViewModel() {
     private val repository = SearchRepository()
+    private val countryRepository = CountryRepository()
     
     var searchResults by mutableStateOf<List<Poster>>(emptyList())
         private set
     
+    var countries by mutableStateOf<List<Country>>(emptyList())
+        private set
+    
     var isLoading by mutableStateOf(false)
+        private set
+    
+    var isCountriesLoading by mutableStateOf(false)
         private set
     
     var errorMessage by mutableStateOf<String?>(null)
@@ -28,6 +37,10 @@ class SearchViewModel : ViewModel() {
         private set
     
     private var searchJob: Job? = null
+    
+    init {
+        loadCountries()
+    }
     
     fun updateSearchQuery(query: String) {
         searchQuery = query
@@ -66,6 +79,20 @@ class SearchViewModel : ViewModel() {
                 searchResults = emptyList()
             } finally {
                 isLoading = false
+            }
+        }
+    }
+    
+    private fun loadCountries() {
+        viewModelScope.launch {
+            try {
+                isCountriesLoading = true
+                countries = countryRepository.getAllCountries()
+            } catch (e: Exception) {
+                // Handle error silently for countries
+                countries = emptyList()
+            } finally {
+                isCountriesLoading = false
             }
         }
     }
