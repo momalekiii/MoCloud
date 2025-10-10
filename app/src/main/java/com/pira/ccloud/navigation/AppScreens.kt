@@ -78,6 +78,13 @@ sealed class AppScreens(
         showBottomBar = false,
         showSidebar = false
     )
+    
+    data object Country : AppScreens(
+        route = "country/{countryId}",
+        resourceId = R.string.country,
+        showBottomBar = false,
+        showSidebar = false
+    )
 
     companion object {
         val screens = listOf(Movies, Series, Search, Favorites, Settings)

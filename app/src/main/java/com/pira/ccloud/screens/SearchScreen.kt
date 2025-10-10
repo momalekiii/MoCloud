@@ -177,7 +177,8 @@ fun SearchScreen(
                     CountryStoryItem(
                         country = country,
                         onClick = {
-                            // TODO: Handle country selection
+                            // Navigate to country screen
+                            navController?.navigate("country/${country.id}")
                         }
                     )
                 }
