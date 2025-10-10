@@ -100,6 +100,7 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
     val currentScreen = when {
         currentRoute?.startsWith("single_movie") == true -> AppScreens.SingleMovie
         currentRoute?.startsWith("single_series") == true -> AppScreens.SingleSeries
+        currentRoute?.startsWith("country") == true -> AppScreens.Country
         currentRoute == "favorites" -> AppScreens.Favorites
         currentRoute == "about" -> AppScreens.About
         else -> AppScreens.screens.find { it.route == currentRoute } ?: AppScreens.Movies
