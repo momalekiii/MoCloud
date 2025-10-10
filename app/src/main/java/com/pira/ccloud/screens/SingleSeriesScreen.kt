@@ -416,22 +416,77 @@ fun SeriesDetailsContent(
                         )
                 )
                 
-                // Foreground series poster
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        ImageRequest.Builder(LocalContext.current)
-                            .data(series.image)
-                            .crossfade(true)
-                            .build()
-                    ),
-                    contentDescription = series.title,
+                // Row to contain poster and series details side by side
+                Row(
                     modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(start = 16.dp, bottom = 16.dp)
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Fit
-                )
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    // Foreground series poster
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            ImageRequest.Builder(LocalContext.current)
+                                .data(series.image)
+                                .crossfade(true)
+                                .build()
+                        ),
+                        contentDescription = series.title,
+                        modifier = Modifier
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Fit
+                    )
+                    
+                    // Series details to the right of the poster
+                    Column(
+                        modifier = Modifier
+                            .padding(start = 16.dp)
+                            .weight(1f)
+                    ) {
+                        // Series title
+                        Text(
+                            text = series.title,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        
+                        // Country and year
+                        val countryText = if (series.country.isNotEmpty()) {
+                            "${series.country.joinToString(", ") { it.title }} (${series.year})"
+                        } else {
+                            "(${series.year})"
+                        }
+                        
+                        Text(
+                            text = countryText,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        // Rating
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Rating",
+                                tint = Color.Yellow,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            
+                            Spacer(modifier = Modifier.width(8.dp))
+                            
+                            Text(
+                                text = String.format("%.1f", series.imdb),
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
                 
                 // Back button
                 IconButton(
@@ -496,57 +551,6 @@ fun SeriesDetailsContent(
                         tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
                 }
-            }
-        }
-        
-        item {
-            // Series title with country and year
-            Text(
-                text = series.title,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-        }
-        
-        item {
-            // Country and year
-            val countryText = if (series.country.isNotEmpty()) {
-                "${series.country.joinToString(", ") { it.title }} (${series.year})"
-            } else {
-                "(${series.year})"
-            }
-            
-            Text(
-                text = countryText,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-        }
-        
-        item {
-            // Rating
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = "Rating",
-                    tint = Color.Yellow,
-                    modifier = Modifier.size(24.dp)
-                )
-                
-                Spacer(modifier = Modifier.width(8.dp))
-                
-                Text(
-                    text = String.format("%.1f", series.imdb),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
             }
         }
         
