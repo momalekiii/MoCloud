@@ -18,8 +18,8 @@ android {
         // Android 8.x and below are not supported due to Jetpack Compose limitations
         minSdk = 26
         targetSdk = 36
-        versionCode = 12
-        versionName = "1.1.1"
+        versionCode = 13
+        versionName = "1.1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
