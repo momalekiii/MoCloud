@@ -36,6 +36,10 @@ class SearchViewModel : ViewModel() {
     var searchQuery by mutableStateOf("")
         private set
     
+    // New state to track if a search has been performed
+    var hasSearched by mutableStateOf(false)
+        private set
+    
     private var searchJob: Job? = null
     
     init {
@@ -44,19 +48,18 @@ class SearchViewModel : ViewModel() {
     
     fun updateSearchQuery(query: String) {
         searchQuery = query
-        // Cancel any existing search job
-        searchJob?.cancel()
-        
-        // If query is not empty, start a new search after a delay
-        if (query.isNotEmpty()) {
-            searchJob = viewModelScope.launch {
-                // Add a small delay to avoid too many API calls while typing
-                delay(500)
-                search(query)
-            }
-        } else {
-            // Clear results if query is empty
+        // Don't auto-search anymore - only search when explicitly triggered
+        // Reset search state when query changes
+        if (!hasSearched) {
             searchResults = emptyList()
+        }
+    }
+    
+    // New function to explicitly trigger search
+    fun triggerSearch() {
+        if (searchQuery.isNotEmpty()) {
+            hasSearched = true
+            search(searchQuery)
         }
     }
     
@@ -101,5 +104,6 @@ class SearchViewModel : ViewModel() {
         searchQuery = ""
         searchResults = emptyList()
         errorMessage = null
+        hasSearched = false
     }
 }

@@ -86,10 +86,6 @@ fun SearchScreen(
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
     
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
-    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -109,11 +105,19 @@ fun SearchScreen(
                 ) 
             },
             leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                IconButton(onClick = { 
+                    // Trigger search when clicking search icon
+                    if (viewModel.searchQuery.isNotEmpty()) {
+                        viewModel.triggerSearch()
+                        focusManager.clearFocus()
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             },
             trailingIcon = {
                 if (viewModel.searchQuery.isNotEmpty()) {
@@ -131,6 +135,10 @@ fun SearchScreen(
             ),
             keyboardActions = KeyboardActions(
                 onSearch = {
+                    // Trigger search when pressing Enter
+                    if (viewModel.searchQuery.isNotEmpty()) {
+                        viewModel.triggerSearch()
+                    }
                     focusManager.clearFocus()
                 }
             ),
@@ -141,7 +149,8 @@ fun SearchScreen(
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
             ),
-            shape = RoundedCornerShape(24.dp)
+            shape = RoundedCornerShape(24.dp),
+            singleLine = true
         )
         
         // Country stories section - always visible at the top
@@ -211,7 +220,7 @@ fun SearchScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
-                            onClick = { viewModel.updateSearchQuery(viewModel.searchQuery) },
+                            onClick = { viewModel.triggerSearch() },
                             modifier = Modifier.padding(16.dp)
                         ) {
                             Text("Retry")
@@ -226,7 +235,8 @@ fun SearchScreen(
                     context = context
                 )
             }
-            viewModel.searchQuery.isNotEmpty() && !viewModel.isLoading -> {
+            // Only show "No results found" after a search has been performed
+            viewModel.hasSearched && viewModel.searchQuery.isNotEmpty() && !viewModel.isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
