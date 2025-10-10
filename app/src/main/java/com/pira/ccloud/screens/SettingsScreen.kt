@@ -117,8 +117,13 @@ fun SettingsScreen(
     var latestVersionUrl by remember { mutableStateOf("") }
     var isCheckingUpdate by remember { mutableStateOf(false) }
     
-    // Focus requester for handling TV remote navigation
+    // Focus requesters for handling TV remote navigation
     val focusRequester = remember { FocusRequester() }
+    val themeCardFocusRequester = remember { FocusRequester() }
+    val videoCardFocusRequester = remember { FocusRequester() }
+    val aboutCardFocusRequester = remember { FocusRequester() }
+    val updateCardFocusRequester = remember { FocusRequester() }
+    val resetCardFocusRequester = remember { FocusRequester() }
     
     // Configure JSON to ignore unknown keys
     val json = Json { ignoreUnknownKeys = true }
@@ -276,7 +281,10 @@ fun SettingsScreen(
                     navController?.let {
                         IconButton(
                             onClick = { navController.navigate("favorites") },
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier
+                                .size(48.dp)
+                                .focusable()
+                                .focusRequester(remember { FocusRequester() })
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Favorite,
@@ -304,7 +312,10 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .clickable { isExpanded = !isExpanded }
                         .focusable()
-                        .focusRequester(focusRequester)
+                        .focusRequester(themeCardFocusRequester)
+                        .focusProperties {
+                            down = videoCardFocusRequester
+                        }
                         .onKeyEvent { keyEvent ->
                             when (keyEvent.key) {
                                 Key.Enter, Key.Spacebar -> {
@@ -470,7 +481,11 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .clickable { isExpanded = !isExpanded }
                         .focusable()
-                        .focusRequester(focusRequester)
+                        .focusRequester(videoCardFocusRequester)
+                        .focusProperties {
+                            up = themeCardFocusRequester
+                            down = aboutCardFocusRequester
+                        }
                         .onKeyEvent { keyEvent ->
                             when (keyEvent.key) {
                                 Key.Enter, Key.Spacebar -> {
@@ -560,7 +575,8 @@ fun SettingsScreen(
                                     onColorSelected = { color ->
                                         updateSubtitleSettings(subtitleSettings.copy(backgroundColor = color.toArgb()))
                                     },
-                                    noColorOption = true
+                                    noColorOption = true,
+                                    glassBackgroundOption = true
                                 )
                                 
                                 Spacer(modifier = Modifier.height(12.dp))
@@ -584,7 +600,8 @@ fun SettingsScreen(
                                     onColorSelected = { color ->
                                         updateSubtitleSettings(subtitleSettings.copy(borderColor = color.toArgb()))
                                     },
-                                    noColorOption = true
+                                    noColorOption = true,
+                                    glassBackgroundOption = true
                                 )
                                 
                                 Spacer(modifier = Modifier.height(12.dp))
@@ -665,7 +682,11 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .clickable { navController?.navigate("about") }
                         .focusable()
-                        .focusRequester(focusRequester)
+                        .focusRequester(aboutCardFocusRequester)
+                        .focusProperties {
+                            up = videoCardFocusRequester
+                            down = updateCardFocusRequester
+                        }
                         .onKeyEvent { keyEvent ->
                             when (keyEvent.key) {
                                 Key.Enter, Key.Spacebar -> {
@@ -737,7 +758,11 @@ fun SettingsScreen(
                             }
                         }
                         .focusable()
-                        .focusRequester(focusRequester)
+                        .focusRequester(updateCardFocusRequester)
+                        .focusProperties {
+                            up = aboutCardFocusRequester
+                            down = resetCardFocusRequester
+                        }
                         .onKeyEvent { keyEvent ->
                             when (keyEvent.key) {
                                 Key.Enter, Key.Spacebar -> {
@@ -818,7 +843,10 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .clickable { showResetDialog = true }
                         .focusable()
-                        .focusRequester(focusRequester)
+                        .focusRequester(resetCardFocusRequester)
+                        .focusProperties {
+                            up = updateCardFocusRequester
+                        }
                         .onKeyEvent { keyEvent ->
                             when (keyEvent.key) {
                                 Key.Enter, Key.Spacebar -> {
@@ -1032,6 +1060,7 @@ fun SubtitleColorSetting(
     currentColor: Color,
     onColorSelected: (Color) -> Unit,
     noColorOption: Boolean = false,
+    glassBackgroundOption: Boolean = false,
     defaultColor: Color? = null
 ) {
     Column {
@@ -1053,7 +1082,18 @@ fun SubtitleColorSetting(
                         color = Color.Transparent,
                         isSelected = currentColor == Color.Transparent,
                         onClick = { onColorSelected(Color.Transparent) },
-                        showBorder = true
+                        showBorder = true,
+                        label = "Empty"
+                    )
+                }
+                
+                // Glass background option (semi-transparent)
+                if (glassBackgroundOption) {
+                    ColorOptionButton(
+                        color = Color.Black.copy(alpha = 0.5f),
+                        isSelected = currentColor == Color(SubtitleSettings.GLASS_BACKGROUND),
+                        onClick = { onColorSelected(Color(SubtitleSettings.GLASS_BACKGROUND)) },
+                        label = "Glass"
                     )
                 }
                 
@@ -1099,58 +1139,71 @@ fun ColorOptionButton(
     color: Color,
     isSelected: Boolean,
     onClick: () -> Unit,
-    showBorder: Boolean = false
+    showBorder: Boolean = false,
+    label: String? = null
 ) {
     val focusRequester = remember { FocusRequester() }
     
-    Box(
-        modifier = Modifier
-            .size(32.dp)
-            .clip(RoundedCornerShape(4.dp))
-            .background(
-                if (color == Color.Transparent && showBorder) {
-                    color
-                } else {
-                    color
-                }
-            )
-            .then(
-                if (isSelected) {
-                    Modifier.background(
-                        color = color,
-                        shape = RoundedCornerShape(4.dp)
-                    )
-                } else {
-                    Modifier
-                }
-            )
-            .clickable(onClick = onClick)
-            .focusable()
-            .focusRequester(focusRequester)
-            .onKeyEvent { keyEvent ->
-                when (keyEvent.key) {
-                    Key.Enter, Key.Spacebar -> {
-                        onClick()
-                        true // Handled
-                    }
-                    else -> false // Let default handling occur
-                }
-            },
-        contentAlignment = Alignment.Center
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = "Selected",
-                tint = if (color == Color.White || color == Color.Yellow) Color.Black else Color.White,
-                modifier = Modifier.size(16.dp)
-            )
-        } else if (color == Color.Transparent && showBorder) {
-            Icon(
-                imageVector = Icons.Default.Brightness1,
-                contentDescription = "No color",
-                tint = Color.White.copy(alpha = 0.5f),
-                modifier = Modifier.size(16.dp)
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(
+                    if (color == Color.Transparent && showBorder) {
+                        color
+                    } else {
+                        color
+                    }
+                )
+                .then(
+                    if (isSelected) {
+                        Modifier.background(
+                            color = color,
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
+                .clickable(onClick = onClick)
+                .focusable()
+                .focusRequester(focusRequester)
+                .onKeyEvent { keyEvent ->
+                    when (keyEvent.key) {
+                        Key.Enter, Key.Spacebar -> {
+                            onClick()
+                            true // Handled
+                        }
+                        else -> false // Let default handling occur
+                    }
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Selected",
+                    tint = if (color == Color.White || color == Color.Yellow) Color.Black else Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+            } else if (color == Color.Transparent && showBorder) {
+                Icon(
+                    imageVector = Icons.Default.Brightness1,
+                    contentDescription = "No color",
+                    tint = Color.White.copy(alpha = 0.5f),
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+        
+        if (label != null) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
     }

@@ -16,6 +16,9 @@ data class SubtitleSettings(
         // Default subtitle settings
         val DEFAULT = SubtitleSettings()
         
+        // Glass background color (semi-transparent black)
+        val GLASS_BACKGROUND = Color.argb(128, 0, 0, 0) // 50% transparent black
+        
         // Convert Android Color int to Compose Color
         fun Int.toComposeColor(): ComposeColor = ComposeColor(this)
         
