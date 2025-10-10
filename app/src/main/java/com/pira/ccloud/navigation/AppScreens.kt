@@ -67,7 +67,7 @@ sealed class AppScreens(
         route = "favorites",
         resourceId = R.string.favorites,
         icon = Icons.Default.Favorite,
-        showBottomBar = false,
+        showBottomBar = true,
         showSidebar = true
     )
 

@@ -91,20 +91,13 @@ fun FavoritesScreen(navController: NavController) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Header with back button and delete all button
+        // Header without back button
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back"
-                )
-            }
-            
             Text(
                 text = stringResource(R.string.favorites),
                 modifier = Modifier

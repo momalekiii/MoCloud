@@ -64,6 +64,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pira.ccloud.BuildConfig
 import com.pira.ccloud.R
@@ -644,61 +645,6 @@ fun SettingsScreen(
                 visible = true,
                 enter = fadeIn(animationSpec = tween(800)) + slideInVertically(animationSpec = tween(800, delayMillis = 500)),
                 exit = fadeOut(animationSpec = tween(800)) + slideOutVertically(animationSpec = tween(800))
-            ) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { navController?.navigate("favorites") }
-                        .focusable()
-                        .focusRequester(focusRequester)
-                        .onKeyEvent { keyEvent ->
-                            when (keyEvent.key) {
-                                Key.Enter, Key.Spacebar -> {
-                                    navController?.navigate("favorites")
-                                    true // Handled
-                                }
-                                else -> false // Let default handling occur
-                            }
-                        },
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Favorite,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Text(
-                                text = "Favorites",
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier
-                                    .padding(start = 8.dp)
-                                    .weight(1f)
-                            )
-                        }
-                        
-                        Text(
-                            text = "View and manage your favorite movies and series",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-        
-        item {
-            AnimatedVisibility(
-                visible = true,
-                enter = fadeIn(animationSpec = tween(900)) + slideInVertically(animationSpec = tween(900, delayMillis = 600)),
-                exit = fadeOut(animationSpec = tween(900)) + slideOutVertically(animationSpec = tween(900))
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
