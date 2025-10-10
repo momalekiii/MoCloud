@@ -7,6 +7,7 @@ import com.pira.ccloud.data.model.Movie
 import com.pira.ccloud.data.model.Series
 import com.pira.ccloud.data.model.SubtitleSettings
 import com.pira.ccloud.data.model.VideoPlayerSettings
+import com.pira.ccloud.data.model.FontSettings
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -289,6 +290,33 @@ object StorageUtils {
         } catch (e: Exception) {
             Log.e(TAG, "Error loading video player settings from file", e)
             VideoPlayerSettings.DEFAULT
+        }
+    }
+    
+    // Font settings functions
+    fun saveFontSettings(context: Context, settings: FontSettings) {
+        try {
+            val jsonString = Json.encodeToString(settings)
+            val file = File(context.filesDir, "font_settings.json")
+            file.writeText(jsonString)
+            Log.d(TAG, "Font settings saved to file")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving font settings to file", e)
+        }
+    }
+    
+    fun loadFontSettings(context: Context): FontSettings {
+        return try {
+            val file = File(context.filesDir, "font_settings.json")
+            if (file.exists()) {
+                val jsonString = file.readText()
+                Json.decodeFromString<FontSettings>(jsonString)
+            } else {
+                FontSettings.DEFAULT
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading font settings from file", e)
+            FontSettings.DEFAULT
         }
     }
 }

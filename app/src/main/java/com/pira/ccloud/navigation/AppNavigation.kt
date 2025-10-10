@@ -23,12 +23,14 @@ import com.pira.ccloud.ui.series.SeriesViewModel
 import com.pira.ccloud.ui.country.CountryViewModel
 import com.pira.ccloud.ui.theme.ThemeSettings
 import com.pira.ccloud.ui.theme.ThemeManager
+import com.pira.ccloud.data.model.FontSettings // Add this import
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    onThemeSettingsChanged: (ThemeSettings) -> Unit = {}
+    onThemeSettingsChanged: (ThemeSettings) -> Unit = {},
+    onFontSettingsChanged: (FontSettings) -> Unit = {} // Add this parameter
 ) {
     val context = LocalContext.current
     val themeManager = ThemeManager(context)
@@ -71,7 +73,7 @@ fun AppNavigation(
             SearchScreen(viewModel = searchViewModel, navController = navController)
         }
         composable(route = AppScreens.Settings.route) {
-            SettingsScreen(onThemeSettingsChanged, navController)
+            SettingsScreen(onThemeSettingsChanged, onFontSettingsChanged, navController) // Pass font settings callback
         }
         composable(route = AppScreens.Favorites.route) {
             FavoritesScreen(navController)

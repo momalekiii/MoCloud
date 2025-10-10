@@ -71,6 +71,8 @@ import com.pira.ccloud.BuildConfig
 import com.pira.ccloud.R
 import com.pira.ccloud.data.model.SubtitleSettings
 import com.pira.ccloud.data.model.VideoPlayerSettings
+import com.pira.ccloud.data.model.FontSettings
+import com.pira.ccloud.data.model.FontType
 import com.pira.ccloud.ui.theme.ThemeMode
 import com.pira.ccloud.ui.theme.ThemeSettings
 import com.pira.ccloud.ui.theme.ThemeManager
@@ -105,6 +107,7 @@ data class GitHubRelease(
 @Composable
 fun SettingsScreen(
     onThemeSettingsChanged: (ThemeSettings) -> Unit = {},
+    onFontSettingsChanged: (FontSettings) -> Unit = {}, // Add this parameter
     navController: NavController? = null
 ) {
     val themeManager = ThemeManager(androidx.compose.ui.platform.LocalContext.current)
@@ -112,6 +115,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     var subtitleSettings by remember { mutableStateOf(StorageUtils.loadSubtitleSettings(context)) }
     var videoPlayerSettings by remember { mutableStateOf(StorageUtils.loadVideoPlayerSettings(context)) }
+    var fontSettings by remember { mutableStateOf(StorageUtils.loadFontSettings(context)) }
     var showResetDialog by remember { mutableStateOf(false) }
     var showUpdateDialog by remember { mutableStateOf(false) }
     var latestVersionUrl by remember { mutableStateOf("") }
@@ -145,6 +149,13 @@ fun SettingsScreen(
     fun updateVideoPlayerSettings(newSettings: VideoPlayerSettings) {
         videoPlayerSettings = newSettings
         StorageUtils.saveVideoPlayerSettings(context, newSettings)
+    }
+    
+    // Update font settings
+    fun updateFontSettings(newSettings: FontSettings) {
+        fontSettings = newSettings
+        StorageUtils.saveFontSettings(context, newSettings)
+        onFontSettingsChanged(newSettings) // Add this line to notify parent
     }
     
     // Reset all settings to defaults
@@ -650,6 +661,104 @@ fun SettingsScreen(
                 visible = true,
                 enter = fadeIn(animationSpec = tween(700)) + slideInVertically(animationSpec = tween(700, delayMillis = 400)),
                 exit = fadeOut(animationSpec = tween(700)) + slideOutVertically(animationSpec = tween(700))
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+        
+        // Font Settings Card
+        item {
+            var isExpanded by remember { mutableStateOf(false) }
+            val focusRequester = remember { FocusRequester() }
+            
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(800)) + slideInVertically(animationSpec = tween(800, delayMillis = 600)),
+                exit = fadeOut(animationSpec = tween(800)) + slideOutVertically(animationSpec = tween(800))
+            ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { isExpanded = !isExpanded }
+                        .focusable()
+                        .focusRequester(remember { FocusRequester() })
+                        .onKeyEvent { keyEvent ->
+                            when (keyEvent.key) {
+                                Key.Enter, Key.Spacebar -> {
+                                    isExpanded = !isExpanded
+                                    true // Handled
+                                }
+                                else -> false // Let default handling occur
+                            }
+                        },
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.TextFields,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Text(
+                                text = "Font Settings",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier
+                                    .padding(start = 8.dp)
+                                    .weight(1f)
+                            )
+                            Icon(
+                                imageVector = if (isExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        
+                        AnimatedVisibility(visible = isExpanded) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    text = "Select Font",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+                                
+                                FontOption(
+                                    fontType = FontType.DEFAULT,
+                                    label = "System Default",
+                                    isSelected = fontSettings.fontType == FontType.DEFAULT,
+                                    onSelect = { fontType ->
+                                        val newSettings = fontSettings.copy(fontType = fontType)
+                                        updateFontSettings(newSettings)
+                                    }
+                                )
+                                
+                                FontOption(
+                                    fontType = FontType.VAZIRMATN,
+                                    label = "Vazirmatn",
+                                    isSelected = fontSettings.fontType == FontType.VAZIRMATN,
+                                    onSelect = { fontType ->
+                                        val newSettings = fontSettings.copy(fontType = fontType)
+                                        updateFontSettings(newSettings)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        item {
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(900)) + slideInVertically(animationSpec = tween(900, delayMillis = 700)),
+                exit = fadeOut(animationSpec = tween(900)) + slideOutVertically(animationSpec = tween(900))
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -1206,5 +1315,44 @@ fun ColorOptionButton(
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
+    }
+}
+
+@Composable
+fun FontOption(
+    fontType: FontType,
+    label: String,
+    isSelected: Boolean,
+    onSelect: (FontType) -> Unit
+) {
+    val focusRequester = remember { FocusRequester() }
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect(fontType) }
+            .focusable()
+            .focusRequester(focusRequester)
+            .onKeyEvent { keyEvent ->
+                when (keyEvent.key) {
+                    Key.Enter, Key.Spacebar -> {
+                        onSelect(fontType)
+                        true // Handled
+                    }
+                    else -> false // Let default handling occur
+                }
+            }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = isSelected,
+            onClick = { onSelect(fontType) }
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }

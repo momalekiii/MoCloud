@@ -47,6 +47,8 @@ import com.pira.ccloud.navigation.SidebarNavigation
 import com.pira.ccloud.ui.theme.CCloudTheme
 import com.pira.ccloud.ui.theme.ThemeManager
 import com.pira.ccloud.ui.theme.ThemeSettings
+import com.pira.ccloud.utils.StorageUtils
+import com.pira.ccloud.data.model.FontSettings
 import com.pira.ccloud.utils.DeviceUtils
 
 class MainActivity : ComponentActivity() {
@@ -73,23 +75,33 @@ class MainActivity : ComponentActivity() {
 fun MainApp() {
     val themeManager = ThemeManager(androidx.compose.ui.platform.LocalContext.current)
     var themeSettings by remember { mutableStateOf(themeManager.loadThemeSettings()) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var fontSettings by remember { mutableStateOf(StorageUtils.loadFontSettings(context)) }
     
     // Save theme settings when they change
     LaunchedEffect(themeSettings) {
         themeManager.saveThemeSettings(themeSettings)
     }
     
-    CCloudTheme(themeSettings) {
-        MainScreen(onThemeSettingsChanged = { themeSettings = it })
+    CCloudTheme(themeSettings, fontSettings) {
+        MainScreen(
+            onThemeSettingsChanged = { themeSettings = it },
+            onFontSettingsChanged = { fontSettings = it }
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
+fun MainScreen(
+    onThemeSettingsChanged: (ThemeSettings) -> Unit = {},
+    onFontSettingsChanged: (FontSettings) -> Unit = {}
+) {
     val navController = rememberNavController()
     val themeManager = ThemeManager(androidx.compose.ui.platform.LocalContext.current)
     val themeSettings = themeManager.loadThemeSettings()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val fontSettings = StorageUtils.loadFontSettings(context)
     val configuration = LocalConfiguration.current
     val isTv = DeviceUtils.isTv(androidx.compose.ui.platform.LocalContext.current)
     
@@ -147,15 +159,15 @@ fun MainScreen(onThemeSettingsChanged: (ThemeSettings) -> Unit = {}) {
                         .weight(1f)
                         .padding(start = 16.dp, end = 24.dp, top = 24.dp, bottom = 24.dp)
                 ) {
-                    // Pass theme settings callback to navigation
-                    AppNavigation(navController, onThemeSettingsChanged)
+                    // Pass theme settings and font settings callback to navigation
+                    AppNavigation(navController, onThemeSettingsChanged, onFontSettingsChanged)
                 }
             }
         } else {
             // Mobile/tablet layout with bottom navigation
             Box(modifier = Modifier.padding(innerPadding)) {
-                // Pass theme settings callback to navigation
-                AppNavigation(navController, onThemeSettingsChanged)
+                // Pass theme settings and font settings callback to navigation
+                AppNavigation(navController, onThemeSettingsChanged, onFontSettingsChanged)
             }
         }
     }

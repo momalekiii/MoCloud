@@ -3,6 +3,7 @@ package com.pira.ccloud
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -69,7 +70,9 @@ import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import com.pira.ccloud.data.model.SubtitleSettings
 import com.pira.ccloud.data.model.VideoPlayerSettings
+import com.pira.ccloud.data.model.FontSettings
 import com.pira.ccloud.utils.StorageUtils
+import com.pira.ccloud.ui.theme.FontManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -85,18 +88,22 @@ fun PlayerView.setSubtitleTextSize(spSize: Float) {
     subtitleView?.setFixedTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, pixels)
 }
 
-// Extension function to set subtitle colors
-fun PlayerView.setSubtitleColors(settings: SubtitleSettings) {
-    subtitleView?.setStyle(
-        CaptionStyleCompat(
-            settings.textColor,
-            settings.backgroundColor,
-            settings.borderColor,
-            CaptionStyleCompat.EDGE_TYPE_OUTLINE,
-            settings.borderColor,
-            null // typeface
-        )
+// Extension function to set subtitle colors and font
+fun PlayerView.setSubtitleColors(settings: SubtitleSettings, typeface: Typeface? = null) {
+    // Create a custom CaptionStyleCompat with the typeface
+    val style = CaptionStyleCompat(
+        settings.textColor,
+        settings.backgroundColor,
+        settings.borderColor,
+        CaptionStyleCompat.EDGE_TYPE_OUTLINE,
+        settings.borderColor,
+        typeface
     )
+    subtitleView?.setStyle(style)
+    
+    // Note: ExoPlayer's subtitle rendering has limited support for custom fonts.
+    // The font may not be applied to all subtitle formats or on all Android versions.
+    // This is a known limitation of ExoPlayer's subtitle rendering system.
 }
 
 class VideoPlayerActivity : ComponentActivity() {
@@ -245,13 +252,33 @@ fun VideoPlayerScreen(
     var playerError by remember { mutableStateOf<String?>(null) }
     var showForwardIndicator by remember { mutableStateOf(false) }
     var showRewindIndicator by remember { mutableStateOf(false) }
-    var wasPlayingBeforeSeek by remember { mutableStateOf(false) } // Track if player was playing before seeking
-    var playbackSpeed by remember { mutableStateOf(1.0f) } // Current playback speed (not saved to storage)
-    var showSpeedDropdown by remember { mutableStateOf(false) } // For showing speed selection dropdown
+    var wasPlayingBeforeSeek by remember { mutableStateOf(false) }
+    var playbackSpeed by remember { mutableStateOf(1.0f) }
+    var showSpeedDropdown by remember { mutableStateOf(false) }
     
     // Predefined playback speed options
     val speedOptions = remember {
         listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.5f, 3.0f, 3.5f)
+    }
+    
+    // Load font settings
+    val fontSettings = remember(context) {
+        StorageUtils.loadFontSettings(context)
+    }
+    
+    // Load custom font typeface
+    val customTypeface = remember(fontSettings.fontType) {
+        when (fontSettings.fontType) {
+            com.pira.ccloud.data.model.FontType.DEFAULT -> null
+            com.pira.ccloud.data.model.FontType.VAZIRMATN -> {
+                try {
+                    // Load the Vazirmatn font from assets
+                    Typeface.createFromAsset(context.assets, "font/vazirmatn_regular.ttf")
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        }
     }
     
     // Load video player settings (without affecting playback speed)
@@ -560,9 +587,9 @@ fun VideoPlayerScreen(
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                     
                     // Apply subtitle settings to the player view
-                    // Set subtitle styling
+                    // Set subtitle styling with custom font
                     setSubtitleTextSize(subtitleSettings.textSize)
-                    setSubtitleColors(subtitleSettings)
+                    setSubtitleColors(subtitleSettings, customTypeface)
                 }
             },
             modifier = Modifier.fillMaxSize(),
@@ -570,7 +597,7 @@ fun VideoPlayerScreen(
                 // Update the player view when subtitle settings change
                 // Update subtitle styling when settings change
                 playerView.setSubtitleTextSize(subtitleSettings.textSize)
-                playerView.setSubtitleColors(subtitleSettings)
+                playerView.setSubtitleColors(subtitleSettings, customTypeface)
             }
         )
         
@@ -731,7 +758,8 @@ fun VideoPlayerScreen(
                         Text(
                             text = formatTime(currentPosition),
                             color = Color.White,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontManager.loadFontFamily(context, fontSettings.fontType)
                         )
                         
                         Spacer(modifier = Modifier.weight(1f))
@@ -763,7 +791,8 @@ fun VideoPlayerScreen(
                                         color = Color.White,
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 4.dp)
+                                        modifier = Modifier.padding(horizontal = 4.dp),
+                                        fontFamily = FontManager.loadFontFamily(context, fontSettings.fontType)
                                     )
                                 }
                                 
@@ -777,7 +806,8 @@ fun VideoPlayerScreen(
                                             text = {
                                                 Text(
                                                     text = String.format("%.2fx", speed),
-                                                    color = if (speed == playbackSpeed) MaterialTheme.colorScheme.primary else Color.White
+                                                    color = if (speed == playbackSpeed) MaterialTheme.colorScheme.primary else Color.White,
+                                                    fontFamily = FontManager.loadFontFamily(context, fontSettings.fontType)
                                                 )
                                             },
                                             onClick = {
@@ -799,14 +829,16 @@ fun VideoPlayerScreen(
                                 fontWeight = if (playbackSpeed == 1.0f) FontWeight.Bold else FontWeight.Normal,
                                 modifier = Modifier
                                     .clickable { playbackSpeed = 1.0f }
-                                    .padding(4.dp)
+                                    .padding(4.dp),
+                                fontFamily = FontManager.loadFontFamily(context, fontSettings.fontType)
                             )
                         }
                         
                         Text(
                             text = formatTime(duration),
                             color = Color.White,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontManager.loadFontFamily(context, fontSettings.fontType)
                         )
                     }
                 }

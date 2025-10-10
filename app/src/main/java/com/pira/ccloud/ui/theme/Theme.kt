@@ -14,7 +14,103 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import com.pira.ccloud.data.model.FontSettings
+import com.pira.ccloud.utils.StorageUtils
+
+// Set of Material typography styles to start with
+fun appTypography(fontFamily: FontFamily?): androidx.compose.material3.Typography {
+    return androidx.compose.material3.Typography(
+        bodyLarge = TextStyle(
+            fontFamily = fontFamily ?: FontFamily.Default,
+            fontWeight = FontWeight.Normal,
+            fontSize = 16.sp,
+            lineHeight = 24.sp,
+            letterSpacing = 0.5.sp
+        ),
+        bodyMedium = TextStyle(
+            fontFamily = fontFamily ?: FontFamily.Default,
+            fontWeight = FontWeight.Normal,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            letterSpacing = 0.25.sp
+        ),
+        bodySmall = TextStyle(
+            fontFamily = fontFamily ?: FontFamily.Default,
+            fontWeight = FontWeight.Normal,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.4.sp
+        ),
+        headlineLarge = TextStyle(
+            fontFamily = fontFamily ?: FontFamily.Default,
+            fontWeight = FontWeight.Normal,
+            fontSize = 32.sp,
+            lineHeight = 40.sp,
+            letterSpacing = 0.sp
+        ),
+        headlineMedium = TextStyle(
+            fontFamily = fontFamily ?: FontFamily.Default,
+            fontWeight = FontWeight.Normal,
+            fontSize = 28.sp,
+            lineHeight = 36.sp,
+            letterSpacing = 0.sp
+        ),
+        headlineSmall = TextStyle(
+            fontFamily = fontFamily ?: FontFamily.Default,
+            fontWeight = FontWeight.Normal,
+            fontSize = 24.sp,
+            lineHeight = 32.sp,
+            letterSpacing = 0.sp
+        ),
+        titleLarge = TextStyle(
+            fontFamily = fontFamily ?: FontFamily.Default,
+            fontWeight = FontWeight.Normal,
+            fontSize = 22.sp,
+            lineHeight = 28.sp,
+            letterSpacing = 0.sp
+        ),
+        titleMedium = TextStyle(
+            fontFamily = fontFamily ?: FontFamily.Default,
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+            lineHeight = 24.sp,
+            letterSpacing = 0.15.sp
+        ),
+        titleSmall = TextStyle(
+            fontFamily = fontFamily ?: FontFamily.Default,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            letterSpacing = 0.1.sp
+        ),
+        labelLarge = TextStyle(
+            fontFamily = fontFamily ?: FontFamily.Default,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            letterSpacing = 0.1.sp
+        ),
+        labelMedium = TextStyle(
+            fontFamily = fontFamily ?: FontFamily.Default,
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.5.sp
+        ),
+        labelSmall = TextStyle(
+            fontFamily = fontFamily ?: FontFamily.Default,
+            fontWeight = FontWeight.Medium,
+            fontSize = 11.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.5.sp
+        )
+    )
+}
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -59,13 +155,18 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun CCloudTheme(
     themeSettings: ThemeSettings = ThemeSettings(),
+    fontSettings: FontSettings = FontSettings(), // Add font settings parameter
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
     val darkTheme = when (themeSettings.themeMode) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
+    
+    // Load font family based on font settings
+    val fontFamily = FontManager.loadFontFamily(context, fontSettings.fontType)
     
     val colorScheme = when {
         themeSettings.primaryColor != defaultPrimaryColor -> {
@@ -121,7 +222,7 @@ fun CCloudTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = appTypography(fontFamily),
         content = content
     )
 }
