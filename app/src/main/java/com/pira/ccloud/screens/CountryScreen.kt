@@ -31,6 +31,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -38,6 +39,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -80,32 +82,61 @@ fun CountryScreen(
     }
     
     val posters = viewModel.posters
+    val countryName = viewModel.countryName
     val isLoading = viewModel.isLoading
     val isLoadingMore = viewModel.isLoadingMore
     val errorMessage = viewModel.errorMessage
     
-    when {
-        isLoading && posters.isEmpty() -> {
-            // Show modern loading animation when initial posters are loading
-            CountryLoadingScreen()
-        }
-        errorMessage != null && posters.isEmpty() -> {
-            CountryErrorScreen(
-                errorMessage = errorMessage,
-                onRetry = { viewModel.retry() }
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Header with back button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { navController?.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back"
+                )
+            }
+            
+            Text(
+                text = countryName,
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 16.dp)
             )
         }
-        else -> {
-            CountryPosterGrid(
-                posters = posters,
-                isLoading = isLoading,
-                isLoadingMore = isLoadingMore,
-                errorMessage = errorMessage,
-                onRetry = { viewModel.retry() },
-                onRefresh = { viewModel.refresh() },
-                onLoadMore = { viewModel.loadMorePosters() },
-                navController = navController
-            )
+        
+        // Content
+        when {
+            isLoading && posters.isEmpty() -> {
+                // Show modern loading animation when initial posters are loading
+                CountryLoadingScreen()
+            }
+            errorMessage != null && posters.isEmpty() -> {
+                CountryErrorScreen(
+                    errorMessage = errorMessage,
+                    onRetry = { viewModel.retry() }
+                )
+            }
+            else -> {
+                CountryPosterGrid(
+                    posters = posters,
+                    isLoading = isLoading,
+                    isLoadingMore = isLoadingMore,
+                    errorMessage = errorMessage,
+                    onRetry = { viewModel.retry() },
+                    onRefresh = { viewModel.refresh() },
+                    onLoadMore = { viewModel.loadMorePosters() },
+                    navController = navController
+                )
+            }
         }
     }
 }

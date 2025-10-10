@@ -121,7 +121,10 @@ fun SearchScreen(
             },
             trailingIcon = {
                 if (viewModel.searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { viewModel.clearSearch() }) {
+                    IconButton(onClick = { 
+                        viewModel.clearSearch()
+                        focusManager.clearFocus() // Dismiss keyboard when clearing search
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Clear,
                             contentDescription = "Clear",
@@ -153,34 +156,36 @@ fun SearchScreen(
             singleLine = true
         )
         
-        // Country stories section - always visible at the top
-        if (viewModel.isCountriesLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        } else if (viewModel.countries.isNotEmpty()) {
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(viewModel.countries) { country ->
-                    CountryStoryItem(
-                        country = country,
-                        onClick = {
-                            // Navigate to country screen
-                            navController?.navigate("country/${country.id}")
-                        }
+        // Country stories section - only visible when search is empty
+        if (viewModel.searchQuery.isEmpty()) {
+            if (viewModel.isCountriesLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.primary
                     )
+                }
+            } else if (viewModel.countries.isNotEmpty()) {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(viewModel.countries) { country ->
+                        CountryStoryItem(
+                            country = country,
+                            onClick = {
+                                // Navigate to country screen
+                                navController?.navigate("country/${country.id}")
+                            }
+                        )
+                    }
                 }
             }
         }

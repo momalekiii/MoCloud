@@ -7,13 +7,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pira.ccloud.data.model.Poster
 import com.pira.ccloud.data.repository.CountryPostersRepository
+import com.pira.ccloud.data.repository.CountryRepository
 import com.pira.ccloud.utils.LanguageUtils
 import kotlinx.coroutines.launch
 
 class CountryViewModel : ViewModel() {
-    private val repository = CountryPostersRepository()
+    private val postersRepository = CountryPostersRepository()
+    private val countryRepository = CountryRepository()
     
     var posters by mutableStateOf<List<Poster>>(emptyList())
+        private set
+    
+    var countryName by mutableStateOf<String>("")
         private set
     
     var isLoading by mutableStateOf(false)
@@ -37,7 +42,20 @@ class CountryViewModel : ViewModel() {
     fun setCountryId(id: Int) {
         if (countryId != id) {
             countryId = id
+            loadCountryName()
             refresh()
+        }
+    }
+    
+    private fun loadCountryName() {
+        viewModelScope.launch {
+            try {
+                val countries = countryRepository.getAllCountries()
+                val country = countries.find { it.id == countryId }
+                countryName = country?.title ?: "Country"
+            } catch (e: Exception) {
+                countryName = "Country"
+            }
         }
     }
     
@@ -53,7 +71,7 @@ class CountryViewModel : ViewModel() {
                 }
                 errorMessage = null
                 
-                val newPosters = repository.getPostersByCountry(currentCountryId, page)
+                val newPosters = postersRepository.getPostersByCountry(currentCountryId, page)
                 
                 // Filter out posters with Farsi titles
                 val filteredPosters = newPosters.filter { poster ->
