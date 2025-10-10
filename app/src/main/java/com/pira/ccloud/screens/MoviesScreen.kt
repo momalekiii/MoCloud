@@ -64,6 +64,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.pira.ccloud.components.GenreFilterSection
+import com.pira.ccloud.data.model.Genre
 import com.pira.ccloud.data.model.Movie
 import com.pira.ccloud.ui.movies.MoviesViewModel
 import com.pira.ccloud.utils.DeviceUtils
@@ -78,6 +80,9 @@ fun MoviesScreen(
     val isLoading = viewModel.isLoading
     val isLoadingMore = viewModel.isLoadingMore
     val errorMessage = viewModel.errorMessage
+    val genres = viewModel.genres
+    val selectedGenreId = viewModel.selectedGenreId
+    val selectedFilterType = viewModel.selectedFilterType
     
     LaunchedEffect(Unit) {
         if (movies.isEmpty()) {
@@ -85,28 +90,39 @@ fun MoviesScreen(
         }
     }
     
-    when {
-        isLoading && movies.isEmpty() -> {
-            // Show modern loading animation when initial movies are loading
-            LoadingScreen()
-        }
-        errorMessage != null && movies.isEmpty() -> {
-            ErrorScreen(
-                errorMessage = errorMessage,
-                onRetry = { viewModel.retry() }
-            )
-        }
-        else -> {
-            MovieGrid(
-                movies = movies,
-                isLoading = isLoading,
-                isLoadingMore = isLoadingMore,
-                errorMessage = errorMessage,
-                onRetry = { viewModel.retry() },
-                onRefresh = { viewModel.refresh() },
-                onLoadMore = { viewModel.loadMoreMovies() },
-                navController = navController
-            )
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Genre filter section
+        GenreFilterSection(
+            genres = genres,
+            selectedGenreId = selectedGenreId,
+            selectedFilterType = selectedFilterType,
+            onGenreSelected = { genreId -> viewModel.selectGenre(genreId) },
+            onFilterTypeSelected = { filterType -> viewModel.selectFilterType(filterType) }
+        )
+        
+        when {
+            isLoading && movies.isEmpty() -> {
+                // Show modern loading animation when initial movies are loading
+                LoadingScreen()
+            }
+            errorMessage != null && movies.isEmpty() -> {
+                ErrorScreen(
+                    errorMessage = errorMessage,
+                    onRetry = { viewModel.retry() }
+                )
+            }
+            else -> {
+                MovieGrid(
+                    movies = movies,
+                    isLoading = isLoading,
+                    isLoadingMore = isLoadingMore,
+                    errorMessage = errorMessage,
+                    onRetry = { viewModel.retry() },
+                    onRefresh = { viewModel.refresh() },
+                    onLoadMore = { viewModel.loadMoreMovies() },
+                    navController = navController
+                )
+            }
         }
     }
 }

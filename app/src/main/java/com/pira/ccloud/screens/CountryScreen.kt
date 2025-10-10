@@ -32,12 +32,15 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -65,6 +68,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.pira.ccloud.data.model.FilterType
 import com.pira.ccloud.data.model.Poster
 import com.pira.ccloud.ui.country.CountryViewModel
 import com.pira.ccloud.utils.DeviceUtils
@@ -86,11 +90,12 @@ fun CountryScreen(
     val isLoading = viewModel.isLoading
     val isLoadingMore = viewModel.isLoadingMore
     val errorMessage = viewModel.errorMessage
+    val selectedFilterType = viewModel.selectedFilterType
     
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Header with back button
+        // Header with back button and filter icon
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -111,6 +116,65 @@ fun CountryScreen(
                     .weight(1f)
                     .padding(start = 16.dp)
             )
+            
+            // Filter icon button
+            var filterMenuExpanded by remember { mutableStateOf(false) }
+            Box {
+                IconButton(onClick = { filterMenuExpanded = true }) {
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = "Filter",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                
+                DropdownMenu(
+                    expanded = filterMenuExpanded,
+                    onDismissRequest = { filterMenuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Default") },
+                        onClick = {
+                            viewModel.selectFilterType(FilterType.DEFAULT)
+                            filterMenuExpanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("By Year") },
+                        onClick = {
+                            viewModel.selectFilterType(FilterType.BY_YEAR)
+                            filterMenuExpanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("By IMDB") },
+                        onClick = {
+                            viewModel.selectFilterType(FilterType.BY_IMDB)
+                            filterMenuExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+        
+        // Show selected filter type
+        if (selectedFilterType != FilterType.DEFAULT) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = when (selectedFilterType) {
+                        FilterType.DEFAULT -> ""
+                        FilterType.BY_YEAR -> "Sorted by Year"
+                        FilterType.BY_IMDB -> "Sorted by IMDB"
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
         
         // Content

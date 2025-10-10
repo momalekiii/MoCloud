@@ -1,5 +1,6 @@
 package com.pira.ccloud.data.repository
 
+import com.pira.ccloud.data.model.FilterType
 import com.pira.ccloud.data.model.Poster
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -10,10 +11,10 @@ import org.json.JSONObject
 class CountryPostersRepository : BaseRepository() {
     private val BASE_URL = "https://hostinnegar.com/api/poster/by/filtres"
     
-    suspend fun getPostersByCountry(countryId: Int, page: Int = 0): List<Poster> {
+    suspend fun getPostersByCountry(countryId: Int, page: Int = 0, filterType: FilterType = FilterType.DEFAULT): List<Poster> {
         return withContext(Dispatchers.IO) {
             try {
-                val url = "$BASE_URL/0/$countryId/created/$page/$API_KEY"
+                val url = buildUrl(countryId, filterType, page)
                 
                 val jsonData = executeRequest(url) { Request.Builder().url(it).build() }
                 
@@ -21,6 +22,14 @@ class CountryPostersRepository : BaseRepository() {
             } catch (e: Exception) {
                 throw Exception("Error fetching posters for country $countryId: ${e.message}")
             }
+        }
+    }
+    
+    private fun buildUrl(countryId: Int, filterType: FilterType, page: Int): String {
+        return when (filterType) {
+            FilterType.DEFAULT -> "$BASE_URL/0/$countryId/created/$page/$API_KEY"
+            FilterType.BY_YEAR -> "$BASE_URL/0/$countryId/year/$page/$API_KEY"
+            FilterType.BY_IMDB -> "$BASE_URL/0/$countryId/imdb/$page/$API_KEY"
         }
     }
     

@@ -156,8 +156,8 @@ fun SearchScreen(
             singleLine = true
         )
         
-        // Country stories section - only visible when search is empty
-        if (viewModel.searchQuery.isEmpty()) {
+        // Country stories section - only visible when no search has been performed
+        if (!viewModel.hasSearched) {
             if (viewModel.isCountriesLoading) {
                 Box(
                     modifier = Modifier

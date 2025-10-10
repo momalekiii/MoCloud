@@ -1,6 +1,7 @@
 package com.pira.ccloud.data.repository
 
 import com.pira.ccloud.data.model.Country
+import com.pira.ccloud.data.model.FilterType
 import com.pira.ccloud.data.model.Genre
 import com.pira.ccloud.data.model.Movie
 import com.pira.ccloud.data.model.Source
@@ -13,12 +14,12 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 class MovieRepository : BaseRepository() {
-    private val BASE_URL = "https://hostinnegar.com/api/movie/by/filtres/0/created"
+    private val BASE_URL = "https://hostinnegar.com/api/movie/by/filtres"
     
-    suspend fun getMovies(page: Int = 0): List<Movie> {
+    suspend fun getMovies(page: Int = 0, genreId: Int = 0, filterType: FilterType = FilterType.DEFAULT): List<Movie> {
         return withContext(Dispatchers.IO) {
             try {
-                val url = "$BASE_URL/$page/$API_KEY"
+                val url = buildUrl(BASE_URL, genreId, filterType, page)
                 
                 val jsonData = executeRequest(url) { Request.Builder().url(it).build() }
                 
@@ -26,6 +27,14 @@ class MovieRepository : BaseRepository() {
             } catch (e: Exception) {
                 throw Exception("Error fetching movies: ${e.message}")
             }
+        }
+    }
+    
+    private fun buildUrl(baseUrl: String, genreId: Int, filterType: FilterType, page: Int): String {
+        return when (filterType) {
+            FilterType.DEFAULT -> "$baseUrl/$genreId/created/$page/$API_KEY"
+            FilterType.BY_YEAR -> "$baseUrl/$genreId/year/0/$API_KEY"
+            FilterType.BY_IMDB -> "$baseUrl/$genreId/imdb/0/$API_KEY"
         }
     }
     

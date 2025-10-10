@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pira.ccloud.data.model.FilterType
 import com.pira.ccloud.data.model.Poster
 import com.pira.ccloud.data.repository.CountryPostersRepository
 import com.pira.ccloud.data.repository.CountryRepository
@@ -39,10 +40,20 @@ class CountryViewModel : ViewModel() {
     var countryId by mutableStateOf<Int?>(null)
         private set
     
+    var selectedFilterType by mutableStateOf(FilterType.DEFAULT)
+        private set
+    
     fun setCountryId(id: Int) {
         if (countryId != id) {
             countryId = id
             loadCountryName()
+            refresh()
+        }
+    }
+    
+    fun selectFilterType(filterType: FilterType) {
+        if (selectedFilterType != filterType) {
+            selectedFilterType = filterType
             refresh()
         }
     }
@@ -71,7 +82,7 @@ class CountryViewModel : ViewModel() {
                 }
                 errorMessage = null
                 
-                val newPosters = postersRepository.getPostersByCountry(currentCountryId, page)
+                val newPosters = postersRepository.getPostersByCountry(currentCountryId, page, selectedFilterType)
                 
                 // Filter out posters with Farsi titles
                 val filteredPosters = newPosters.filter { poster ->
