@@ -614,13 +614,6 @@ fun FavoritesScreen(navController: NavController) {
                             .padding(bottom = 16.dp)
                     )
                     Text(text = "No favorites yet")
-                    if (selectedGroup?.isDefault == false) {
-                        Text(
-                            text = "Add items to this playlist by moving them from the default Favorites playlist",
-                            modifier = Modifier.padding(top = 8.dp),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
                 }
             }
         } else {

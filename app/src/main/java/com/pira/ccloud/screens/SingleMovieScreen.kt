@@ -63,6 +63,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.pira.ccloud.VideoPlayerActivity
 import com.pira.ccloud.components.DownloadOptionsDialog
+import com.pira.ccloud.components.ExpandableText
 import com.pira.ccloud.data.model.FavoriteItem
 import com.pira.ccloud.data.model.Movie
 import com.pira.ccloud.data.model.Source
@@ -384,14 +385,11 @@ fun MovieDetailsContent(
         
         // Set layout direction to RTL for the description text
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-            Text(
+            ExpandableText(
                 text = movie.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
                     .padding(start = 16.dp, end = 16.dp)
-                    .fillMaxWidth(),
-                textAlign = TextAlign.Right
+                    .fillMaxWidth()
             )
         }
         

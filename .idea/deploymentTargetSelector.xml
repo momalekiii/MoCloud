@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-10-12T20:11:15.966302Z">
+        <DropdownSelection timestamp="2025-10-12T20:34:20.452957400Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Dell\.android\avd\AndroidTV_Emu.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Dell\.android\avd\Pixel_8.avd" />
             </handle>
           </Target>
         </DropdownSelection>
