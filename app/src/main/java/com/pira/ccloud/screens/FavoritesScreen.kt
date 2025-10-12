@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -38,6 +40,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,6 +51,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
@@ -119,22 +123,81 @@ fun FavoritesScreen(navController: NavController) {
                     value = groupName,
                     onValueChange = { groupName = it },
                     label = { Text("Playlist Name") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true, // Prevent new lines
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (groupName.isNotBlank()) {
+                                // Check if group with same name already exists
+                                val existingGroup = groups.find { 
+                                    it.name.equals(groupName, ignoreCase = true) 
+                                }
+                                
+                                if (existingGroup == null) {
+                                    val newGroup = FavoriteGroup(
+                                        id = UUID.randomUUID().toString(),
+                                        name = groupName,
+                                        isDefault = false
+                                    )
+                                    StorageUtils.saveFavoriteGroup(context, newGroup)
+                                    groups = StorageUtils.loadAllFavoriteGroups(context)
+                                    showCreateGroupDialog = false
+                                    groupName = ""
+                                    // Show success message
+                                    android.widget.Toast.makeText(
+                                        context, 
+                                        "Playlist created successfully", 
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    // Show error message
+                                    android.widget.Toast.makeText(
+                                        context, 
+                                        "A playlist with this name already exists", 
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        }
+                    )
                 )
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         if (groupName.isNotBlank()) {
-                            val newGroup = FavoriteGroup(
-                                id = UUID.randomUUID().toString(),
-                                name = groupName,
-                                isDefault = false
-                            )
-                            StorageUtils.saveFavoriteGroup(context, newGroup)
-                            groups = StorageUtils.loadAllFavoriteGroups(context)
-                            showCreateGroupDialog = false
-                            groupName = ""
+                            // Check if group with same name already exists
+                            val existingGroup = groups.find { 
+                                it.name.equals(groupName, ignoreCase = true) 
+                            }
+                            
+                            if (existingGroup == null) {
+                                val newGroup = FavoriteGroup(
+                                    id = UUID.randomUUID().toString(),
+                                    name = groupName,
+                                    isDefault = false
+                                )
+                                StorageUtils.saveFavoriteGroup(context, newGroup)
+                                groups = StorageUtils.loadAllFavoriteGroups(context)
+                                showCreateGroupDialog = false
+                                groupName = ""
+                                // Show success message
+                                android.widget.Toast.makeText(
+                                    context, 
+                                    "Playlist created successfully", 
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                // Show error message
+                                android.widget.Toast.makeText(
+                                    context, 
+                                    "A playlist with this name already exists", 
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
                     },
                     enabled = groupName.isNotBlank()
