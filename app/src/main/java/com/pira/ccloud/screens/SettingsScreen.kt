@@ -566,9 +566,9 @@ fun SettingsScreen(
                                 
                                 Spacer(modifier = Modifier.height(12.dp))
                                 
-                                // Border color setting
+                                // Border color setting (Background)
                                 SubtitleColorSetting(
-                                    title = "Border Color",
+                                    title = "Background Color",
                                     currentColor = Color(subtitleSettings.borderColor),
                                     onColorSelected = { color ->
                                         updateSubtitleSettings(subtitleSettings.copy(borderColor = color.toArgb()))
