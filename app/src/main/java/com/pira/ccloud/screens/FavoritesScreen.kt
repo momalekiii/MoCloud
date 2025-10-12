@@ -152,47 +152,88 @@ fun FavoritesScreen(navController: NavController) {
         )
     }
     
-    // Dialog for moving item to a group
+    // Dialog for moving item to groups (multi-select)
     if (showMoveToGroupDialog && selectedItem != null) {
         val item = selectedItem!!
+        var selectedGroups by remember { mutableStateOf<List<String>>(emptyList()) }
+        
+        // Initialize selected groups
+        LaunchedEffect(item) {
+            val currentGroups = StorageUtils.getGroupsForFavorite(context, item.id, item.type)
+            selectedGroups = currentGroups.map { it.id }
+        }
+        
         AlertDialog(
             onDismissRequest = { showMoveToGroupDialog = false },
-            title = { Text("Move to Playlist") },
+            title = { Text("Select Playlists") },
             text = {
                 LazyColumn {
                     items(groups.filter { !it.isDefault }) { group ->
-                        androidx.compose.material3.RadioButton(
-                            selected = selectedGroup?.id == group.id,
-                            onClick = {
-                                StorageUtils.addFavoriteToGroup(context, group.id, item.id, item.type)
-                                selectedGroup = group
-                                favorites = if (selectedGroup != null) {
-                                    StorageUtils.getFavoritesInGroup(context, selectedGroup!!.id)
-                                } else {
-                                    StorageUtils.loadAllFavorites(context)
-                                }
-                                showMoveToGroupDialog = false
-                            }
-                        )
-                        Text(
-                            text = group.name,
+                        val isChecked = selectedGroups.contains(group.id)
+                        Row(
                             modifier = Modifier
-                                .padding(start = 16.dp)
+                                .fillMaxWidth()
                                 .clickable {
-                                    StorageUtils.addFavoriteToGroup(context, group.id, item.id, item.type)
-                                    selectedGroup = group
-                                    favorites = if (selectedGroup != null) {
-                                        StorageUtils.getFavoritesInGroup(context, selectedGroup!!.id)
+                                    selectedGroups = if (isChecked) {
+                                        selectedGroups.filter { it != group.id }
                                     } else {
-                                        StorageUtils.loadAllFavorites(context)
+                                        selectedGroups + group.id
                                     }
-                                    showMoveToGroupDialog = false
                                 }
-                        )
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            androidx.compose.material3.Checkbox(
+                                checked = isChecked,
+                                onCheckedChange = { checked ->
+                                    selectedGroups = if (checked) {
+                                        selectedGroups + group.id
+                                    } else {
+                                        selectedGroups.filter { it != group.id }
+                                    }
+                                }
+                            )
+                            Text(
+                                text = group.name,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
                     }
                 }
             },
             confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Update group memberships
+                        groups.filter { !it.isDefault }.forEach { group ->
+                            if (selectedGroups.contains(group.id)) {
+                                // Add to group if not already there
+                                if (!StorageUtils.isFavoriteInGroup(context, group.id, item.id, item.type)) {
+                                    StorageUtils.addFavoriteToGroup(context, group.id, item.id, item.type)
+                                }
+                            } else {
+                                // Remove from group if it was there
+                                if (StorageUtils.isFavoriteInGroup(context, group.id, item.id, item.type)) {
+                                    StorageUtils.removeFavoriteFromGroup(context, group.id, item.id, item.type)
+                                }
+                            }
+                        }
+                        
+                        // Refresh data
+                        groups = StorageUtils.loadAllFavoriteGroups(context)
+                        favorites = if (selectedGroup != null && !selectedGroup!!.isDefault) {
+                            StorageUtils.getFavoritesInGroup(context, selectedGroup!!.id)
+                        } else {
+                            StorageUtils.loadAllFavorites(context)
+                        }
+                        
+                        showMoveToGroupDialog = false
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
                 TextButton(
                     onClick = { showMoveToGroupDialog = false }
                 ) {

@@ -306,26 +306,11 @@ object StorageUtils {
             val group = groups.find { it.id == groupId }
             
             if (group != null) {
-                // Remove from all other groups first to ensure exclusive membership
-                groups.forEach { g ->
-                    if (g.id != groupId) {
-                        if (type == "movie") {
-                            g.movieIds.remove(favoriteId)
-                        } else if (type == "series") {
-                            g.seriesIds.remove(favoriteId)
-                        }
-                    }
-                }
-                
-                // Add to the specified group
+                // Add to the specified group (allowing multiple groups)
                 if (type == "movie") {
-                    if (!group.movieIds.contains(favoriteId)) {
-                        group.movieIds.add(favoriteId)
-                    }
+                    group.addMovie(favoriteId)
                 } else if (type == "series") {
-                    if (!group.seriesIds.contains(favoriteId)) {
-                        group.seriesIds.add(favoriteId)
-                    }
+                    group.addSeries(favoriteId)
                 }
                 
                 // Save updated groups
@@ -346,9 +331,9 @@ object StorageUtils {
             
             if (group != null) {
                 if (type == "movie") {
-                    group.movieIds.remove(favoriteId)
+                    group.removeMovie(favoriteId)
                 } else if (type == "series") {
-                    group.seriesIds.remove(favoriteId)
+                    group.removeSeries(favoriteId)
                 }
                 
                 // Save updated groups
@@ -359,6 +344,47 @@ object StorageUtils {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error removing favorite from group", e)
+        }
+    }
+    
+    // New function to get all groups for a specific favorite
+    fun getGroupsForFavorite(context: Context, favoriteId: Int, type: String): List<FavoriteGroup> {
+        return try {
+            val groups = loadAllFavoriteGroups(context)
+            groups.filter { group ->
+                if (type == "movie") {
+                    group.containsMovie(favoriteId)
+                } else if (type == "series") {
+                    group.containsSeries(favoriteId)
+                } else {
+                    false
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting groups for favorite", e)
+            emptyList()
+        }
+    }
+    
+    // New function to check if a favorite is in a specific group
+    fun isFavoriteInGroup(context: Context, groupId: String, favoriteId: Int, type: String): Boolean {
+        return try {
+            val groups = loadAllFavoriteGroups(context)
+            val group = groups.find { it.id == groupId }
+            if (group != null) {
+                if (type == "movie") {
+                    group.containsMovie(favoriteId)
+                } else if (type == "series") {
+                    group.containsSeries(favoriteId)
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking if favorite is in group", e)
+            false
         }
     }
     

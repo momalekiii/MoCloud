@@ -9,4 +9,29 @@ data class FavoriteGroup(
     val isDefault: Boolean = false,
     val movieIds: MutableList<Int> = mutableListOf(),
     val seriesIds: MutableList<Int> = mutableListOf()
-)
+) {
+    // Helper functions to check if a favorite is in this group
+    fun containsMovie(movieId: Int): Boolean = movieIds.contains(movieId)
+    fun containsSeries(seriesId: Int): Boolean = seriesIds.contains(seriesId)
+    
+    // Helper functions to add/remove favorites from this group
+    fun addMovie(movieId: Int) {
+        if (!movieIds.contains(movieId)) {
+            movieIds.add(movieId)
+        }
+    }
+    
+    fun addSeries(seriesId: Int) {
+        if (!seriesIds.contains(seriesId)) {
+            seriesIds.add(seriesId)
+        }
+    }
+    
+    fun removeMovie(movieId: Int) {
+        movieIds.remove(movieId)
+    }
+    
+    fun removeSeries(seriesId: Int) {
+        seriesIds.remove(seriesId)
+    }
+}
