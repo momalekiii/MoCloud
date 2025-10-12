@@ -1,10 +1,54 @@
-# CCloud - Movie & TV Series Streaming App
+# CCloud - Movie & TV Series Streaming Application
 
 <p align="center">
   <img src="app/src/main/res/drawable/splash_logo.png" alt="CCloud Logo" width="150"/>
 </p>
 
+<div align="center">
+
+  <!-- Downloads -->
+  <img src="https://img.shields.io/github/downloads/code3-dev/CCloud/total?label=Downloads&style=for-the-badge" alt="Downloads Badge">
+
+  <!-- Main language -->
+  <img src="https://img.shields.io/github/languages/top/code3-dev/CCloud?color=blue&label=Kotlin&style=for-the-badge" alt="Language">
+
+  <!-- License -->
+  <img src="https://img.shields.io/github/license/code3-dev/CCloud?style=for-the-badge" alt="License">
+
+  <!-- Stars -->
+  <img src="https://img.shields.io/github/stars/code3-dev/CCloud?style=for-the-badge" alt="Stars">
+
+  <!-- Issues -->
+  <img src="https://img.shields.io/github/issues/code3-dev/CCloud?style=for-the-badge" alt="Issues">
+
+  <!-- Build Status -->
+  <img src="https://img.shields.io/github/actions/workflow/status/code3-dev/CCloud/build-appshare.yml?label=Build&style=for-the-badge" alt="Build Status">
+
+  <!-- Min Android Version -->
+  <img src="https://img.shields.io/badge/Android-9.0%2B-green?style=for-the-badge&logo=android" alt="Min Android">
+
+  <!-- UI Toolkit -->
+  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-purple?style=for-the-badge" alt="Jetpack Compose">
+
+</div>
+
+---
+
 CCloud is a modern Android streaming application built with Jetpack Compose and Kotlin. The app provides a sleek user interface for browsing movies and TV series, playing videos, and customizing the viewing experience. With a focus on user experience and performance, CCloud delivers high-quality streaming content in an intuitive and visually appealing interface.
+
+## 📦 Download Latest CCloud APKs
+
+<div align="center">
+
+### 🔰 Architecture-Specific Builds
+
+[![ARM64-v8a](https://img.shields.io/badge/⬇️%20Download-ARM64--v8a-brightgreen?style=for-the-badge&logo=android)](https://github.com/code3-dev/CCloud/releases/latest/download/CCloud-arm64-v8a.apk)
+
+[![ARMEABI-v7a](https://img.shields.io/badge/⬇️%20Download-ARMEABI--v7a-blue?style=for-the-badge&logo=android)](https://github.com/code3-dev/CCloud/releases/latest/download/CCloud-armeabi-v7a.apk)
+
+[![Universal](https://img.shields.io/badge/⬇️%20Download-Universal-purple?style=for-the-badge&logo=android)](https://github.com/code3-dev/CCloud/releases/latest/download/CCloud-universal.apk)
+
+</div>
 
 ## 🚀 Key Features
 
@@ -302,6 +346,23 @@ When watching videos on Android TV, you can control playback using your remote c
 2. **Smooth Scrolling**: Content lists support smooth scrolling with the D-pad
 3. **Quick Access**: The sidebar is always accessible for quick navigation between main sections
 4. **Exit App**: Press the **Back** button repeatedly until you exit the app
+
+## 📈 Repository Statistics
+
+<div align="center">
+
+### ⭐ Stars History
+
+[![Stargazers over time](https://starchart.cc/code3-dev/CCloud.svg?variant=adaptive)](https://starchart.cc/code3-dev/CCloud)
+
+---
+
+### 📊 Downloads History
+
+![GitHub all releases](https://img.shields.io/github/downloads/code3-dev/CCloud/total?style=for-the-badge&label=Total%20Downloads)
+![GitHub release (latest by date)](https://img.shields.io/github/downloads/code3-dev/CCloud/latest/total?style=for-the-badge&label=Latest%20Release)
+
+</div>
 
 ## 🤝 Contributing
 
