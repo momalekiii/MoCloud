@@ -31,13 +31,18 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -61,65 +66,138 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.pira.ccloud.components.GenreFilterSection
-import com.pira.ccloud.data.model.Genre
-import com.pira.ccloud.data.model.Movie
-import com.pira.ccloud.ui.movies.MoviesViewModel
+import com.pira.ccloud.data.model.FilterType
+import com.pira.ccloud.data.model.Poster
+import com.pira.ccloud.ui.country.CountryViewModel
 import com.pira.ccloud.utils.DeviceUtils
 import com.pira.ccloud.utils.StorageUtils
 
 @Composable
-fun MoviesScreen(
-    viewModel: MoviesViewModel = viewModel(),
+fun CountryScreen(
+    countryId: Int,
+    viewModel: CountryViewModel = viewModel(),
     navController: NavController? = null
 ) {
-    val movies = viewModel.movies
+    // Set the country ID when the screen is first loaded
+    LaunchedEffect(countryId) {
+        viewModel.setCountryId(countryId)
+    }
+    
+    val posters = viewModel.posters
+    val countryName = viewModel.countryName
     val isLoading = viewModel.isLoading
     val isLoadingMore = viewModel.isLoadingMore
     val errorMessage = viewModel.errorMessage
-    val genres = viewModel.genres
-    val selectedGenreId = viewModel.selectedGenreId
     val selectedFilterType = viewModel.selectedFilterType
     
-    LaunchedEffect(Unit) {
-        if (movies.isEmpty()) {
-            viewModel.loadMovies()
-        }
-    }
-    
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Genre filter section
-        GenreFilterSection(
-            genres = genres,
-            selectedGenreId = selectedGenreId,
-            selectedFilterType = selectedFilterType,
-            onGenreSelected = { genreId -> viewModel.selectGenre(genreId) },
-            onFilterTypeSelected = { filterType -> viewModel.selectFilterType(filterType) }
-        )
-        
-        when {
-            isLoading && movies.isEmpty() -> {
-                // Show modern loading animation when initial movies are loading
-                LoadingScreen()
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Header with back button and filter icon
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { navController?.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back"
+                )
             }
-            errorMessage != null && movies.isEmpty() -> {
-                ErrorScreen(
+            
+            Text(
+                text = countryName,
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 16.dp)
+            )
+            
+            // Filter icon button
+            var filterMenuExpanded by remember { mutableStateOf(false) }
+            Box {
+                IconButton(onClick = { filterMenuExpanded = true }) {
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = "Filter",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                
+                DropdownMenu(
+                    expanded = filterMenuExpanded,
+                    onDismissRequest = { filterMenuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Default") },
+                        onClick = {
+                            viewModel.selectFilterType(FilterType.DEFAULT)
+                            filterMenuExpanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("By Year") },
+                        onClick = {
+                            viewModel.selectFilterType(FilterType.BY_YEAR)
+                            filterMenuExpanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("By IMDB") },
+                        onClick = {
+                            viewModel.selectFilterType(FilterType.BY_IMDB)
+                            filterMenuExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+        
+        // Show selected filter type
+        if (selectedFilterType != FilterType.DEFAULT) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = when (selectedFilterType) {
+                        FilterType.DEFAULT -> ""
+                        FilterType.BY_YEAR -> "Sorted by Year"
+                        FilterType.BY_IMDB -> "Sorted by IMDB"
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+        
+        // Content
+        when {
+            isLoading && posters.isEmpty() -> {
+                // Show modern loading animation when initial posters are loading
+                CountryLoadingScreen()
+            }
+            errorMessage != null && posters.isEmpty() -> {
+                CountryErrorScreen(
                     errorMessage = errorMessage,
                     onRetry = { viewModel.retry() }
                 )
             }
             else -> {
-                MovieGrid(
-                    movies = movies,
+                CountryPosterGrid(
+                    posters = posters,
                     isLoading = isLoading,
                     isLoadingMore = isLoadingMore,
                     errorMessage = errorMessage,
                     onRetry = { viewModel.retry() },
                     onRefresh = { viewModel.refresh() },
-                    onLoadMore = { viewModel.loadMoreMovies() },
+                    onLoadMore = { viewModel.loadMorePosters() },
                     navController = navController
                 )
             }
@@ -128,7 +206,7 @@ fun MoviesScreen(
 }
 
 @Composable
-fun LoadingScreen() {
+fun CountryLoadingScreen() {
     val shimmerColor = MaterialTheme.colorScheme.surfaceVariant
     val shimmerColorShade = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
     
@@ -138,7 +216,7 @@ fun LoadingScreen() {
     ) {
         // Add a title while loading
         Text(
-            text = "Loading Movies...",
+            text = "Loading Content...",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(16.dp),
@@ -159,7 +237,7 @@ fun LoadingScreen() {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(6) { // Show 6 loading placeholders
-                    ShimmerMovieItem(shimmerColor, shimmerColorShade)
+                    CountryShimmerPosterItem(shimmerColor, shimmerColorShade)
                 }
             }
         }
@@ -167,7 +245,7 @@ fun LoadingScreen() {
 }
 
 @Composable
-fun ShimmerMovieItem(
+fun CountryShimmerPosterItem(
     shimmerColor: Color,
     shimmerColorShade: Color
 ) {
@@ -206,7 +284,7 @@ fun ShimmerMovieItem(
                 .fillMaxWidth()
                 .padding(12.dp)
         ) {
-            // Movie poster shimmer
+            // Poster image shimmer
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -271,8 +349,8 @@ fun ShimmerMovieItem(
 }
 
 @Composable
-fun MovieGrid(
-    movies: List<Movie>,
+fun CountryPosterGrid(
+    posters: List<Poster>,
     isLoading: Boolean,
     isLoadingMore: Boolean,
     errorMessage: String?,
@@ -281,7 +359,7 @@ fun MovieGrid(
     onLoadMore: () -> Unit,
     navController: NavController? = null
 ) {
-    val moviesList = movies.toList()
+    val postersList = posters.toList()
     val context = LocalContext.current
     
     val columns = DeviceUtils.getGridColumns(LocalContext.current.resources)
@@ -289,22 +367,27 @@ fun MovieGrid(
         columns = GridCells.Fixed(columns),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        itemsIndexed(moviesList) { index, movie ->
-            MovieItem(
-                movie = movie,
+        itemsIndexed(postersList) { index, poster ->            
+            CountryPosterItem(
+                poster = poster,
                 onClick = {
-                    // Save movie to storage
-                    StorageUtils.saveMovieToFile(context, movie)
-                    // Navigate to single movie screen
-                    navController?.navigate("single_movie/${movie.id}")
+                    if (poster.isMovie()) {
+                        // Save movie to storage and navigate to single movie screen
+                        StorageUtils.saveMovieToFile(context, poster.toMovie())
+                        navController?.navigate("single_movie/${poster.id}")
+                    } else if (poster.isSeries()) {
+                        // Save series to storage and navigate to single series screen
+                        StorageUtils.saveSeriesToFile(context, poster.toSeries())
+                        navController?.navigate("single_series/${poster.id}")
+                    }
                 }
             )
             
             // Load more when we're near the end of the list
-            if (index >= moviesList.size - 3) {
+            if (index >= postersList.size - 3) {
                 LaunchedEffect(Unit) {
                     onLoadMore()
                 }
@@ -320,14 +403,14 @@ fun MovieGrid(
                     contentAlignment = Alignment.Center
                 ) {
                     // Modern animated loading indicator
-                    ModernCircularProgressIndicator()
+                    CountryModernCircularProgressIndicator()
                 }
             }
         }
         
         if (errorMessage != null) {
             item {
-                ErrorItem(
+                CountryErrorItem(
                     errorMessage = errorMessage,
                     onRetry = onRetry
                 )
@@ -342,7 +425,7 @@ fun MovieGrid(
 }
 
 @Composable
-fun ModernCircularProgressIndicator() {
+fun CountryModernCircularProgressIndicator() {
     val transition = rememberInfiniteTransition(label = "progress")
     val progress by transition.animateFloat(
         initialValue = 0f,
@@ -350,7 +433,7 @@ fun ModernCircularProgressIndicator() {
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = 1000,
-                easing = androidx.compose.animation.core.FastOutSlowInEasing
+                easing = FastOutSlowInEasing
             )
         ), label = "progress_anim"
     )
@@ -362,7 +445,7 @@ fun ModernCircularProgressIndicator() {
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = 2000,
-                easing = androidx.compose.animation.core.LinearEasing
+                easing = LinearEasing
             )
         ), label = "rotation_anim"
     )
@@ -379,8 +462,8 @@ fun ModernCircularProgressIndicator() {
 }
 
 @Composable
-fun MovieItem(
-    movie: Movie,
+fun CountryPosterItem(
+    poster: Poster,
     onClick: () -> Unit
 ) {
     Card(
@@ -399,16 +482,16 @@ fun MovieItem(
                 .fillMaxSize()
                 .padding(12.dp)
         ) {
-            // Movie poster with rating overlay
+            // Poster image with rating overlay
             Box {
                 Image(
                     painter = rememberAsyncImagePainter(
                         ImageRequest.Builder(LocalContext.current)
-                            .data(movie.image)
+                            .data(poster.image)
                             .crossfade(true)
                             .build()
                     ),
-                    contentDescription = movie.title,
+                    contentDescription = poster.title,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp)
@@ -438,9 +521,39 @@ fun MovieItem(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = String.format("%.1f", movie.imdb),
+                            text = String.format("%.1f", poster.imdb),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+                
+                // Type indicator at bottom-right corner
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp),
+                    shape = RoundedCornerShape(50.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (poster.isMovie()) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.secondary
+                        }
+                    )
+                ) {
+                    Box(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = if (poster.isMovie()) "Movie" else "Series",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (poster.isMovie()) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSecondary
+                            },
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -449,12 +562,12 @@ fun MovieItem(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // Movie details with weight to fill remaining space
+            // Poster details with weight to fill remaining space
             Column(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = movie.title,
+                    text = poster.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,
@@ -465,7 +578,7 @@ fun MovieItem(
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 Text(
-                    text = movie.year.toString(),
+                    text = poster.year.toString(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -473,9 +586,9 @@ fun MovieItem(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 // Genres
-                if (movie.genres.isNotEmpty()) {
+                if (poster.genres.isNotEmpty()) {
                     Text(
-                        text = movie.genres.joinToString(", ") { it.title },
+                        text = poster.genres.joinToString(", ") { it.title },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
@@ -488,7 +601,7 @@ fun MovieItem(
 }
 
 @Composable
-fun ErrorScreen(
+fun CountryErrorScreen(
     errorMessage: String,
     onRetry: () -> Unit
 ) {
@@ -497,10 +610,10 @@ fun ErrorScreen(
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Failed to load movies",
+            text = "Failed to load content",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -529,7 +642,7 @@ fun ErrorScreen(
 }
 
 @Composable
-fun ErrorItem(
+fun CountryErrorItem(
     errorMessage: String,
     onRetry: () -> Unit
 ) {
@@ -550,7 +663,7 @@ fun ErrorItem(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Failed to load more movies",
+                text = "Failed to load more content",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onErrorContainer,
                 modifier = Modifier.padding(bottom = 8.dp)

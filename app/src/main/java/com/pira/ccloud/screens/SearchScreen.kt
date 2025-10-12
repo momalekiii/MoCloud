@@ -22,9 +22,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -61,12 +64,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.pira.ccloud.R
+import com.pira.ccloud.data.model.Country
 import com.pira.ccloud.data.model.Poster
 import com.pira.ccloud.ui.search.SearchViewModel
 import com.pira.ccloud.utils.DeviceUtils
@@ -81,6 +86,7 @@ fun SearchScreen(
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
     
+    // Request focus when the screen is first displayed to ensure keyboard opens on TV
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
@@ -96,7 +102,11 @@ fun SearchScreen(
             onValueChange = { viewModel.updateSearchQuery(it) },
             modifier = Modifier
                 .fillMaxWidth()
-                .focusRequester(focusRequester),
+                .focusRequester(focusRequester)
+                .clickable { 
+                    // Ensure keyboard opens when clicking on the TextField on TV
+                    focusRequester.requestFocus()
+                },
             placeholder = { 
                 Text(
                     text = "Search movies and series...",
@@ -104,15 +114,26 @@ fun SearchScreen(
                 ) 
             },
             leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                IconButton(onClick = { 
+                    // Trigger search when clicking search icon
+                    if (viewModel.searchQuery.isNotEmpty()) {
+                        viewModel.triggerSearch()
+                        focusManager.clearFocus()
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             },
             trailingIcon = {
                 if (viewModel.searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { viewModel.clearSearch() }) {
+                    IconButton(onClick = { 
+                        viewModel.clearSearch()
+                        focusManager.clearFocus() // Dismiss keyboard when clearing search
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Clear,
                             contentDescription = "Clear",
@@ -126,6 +147,10 @@ fun SearchScreen(
             ),
             keyboardActions = KeyboardActions(
                 onSearch = {
+                    // Trigger search when pressing Enter
+                    if (viewModel.searchQuery.isNotEmpty()) {
+                        viewModel.triggerSearch()
+                    }
                     focusManager.clearFocus()
                 }
             ),
@@ -136,8 +161,43 @@ fun SearchScreen(
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
             ),
-            shape = RoundedCornerShape(24.dp)
+            shape = RoundedCornerShape(24.dp),
+            singleLine = true
         )
+        
+        // Country stories section - only visible when no search has been performed
+        if (!viewModel.hasSearched) {
+            if (viewModel.isCountriesLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            } else if (viewModel.countries.isNotEmpty()) {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(viewModel.countries) { country ->
+                        CountryStoryItem(
+                            country = country,
+                            onClick = {
+                                // Navigate to country screen
+                                navController?.navigate("country/${country.id}")
+                            }
+                        )
+                    }
+                }
+            }
+        }
         
         Spacer(modifier = Modifier.height(16.dp))
         
@@ -175,7 +235,7 @@ fun SearchScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
-                            onClick = { viewModel.updateSearchQuery(viewModel.searchQuery) },
+                            onClick = { viewModel.triggerSearch() },
                             modifier = Modifier.padding(16.dp)
                         ) {
                             Text("Retry")
@@ -190,7 +250,8 @@ fun SearchScreen(
                     context = context
                 )
             }
-            viewModel.searchQuery.isNotEmpty() && !viewModel.isLoading -> {
+            // Only show "No results found" after a search has been performed
+            viewModel.hasSearched && viewModel.searchQuery.isNotEmpty() && !viewModel.isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -233,6 +294,49 @@ fun SearchScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun CountryStoryItem(
+    country: com.pira.ccloud.data.model.Country,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable { onClick() }
+    ) {
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = rememberAsyncImagePainter(
+                    ImageRequest.Builder(LocalContext.current)
+                        .data(country.image)
+                        .crossfade(true)
+                        .build()
+                ),
+                contentDescription = country.title,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = country.title,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.width(70.dp),
+            textAlign = TextAlign.Center
+        )
     }
 }
 

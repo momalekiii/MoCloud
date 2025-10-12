@@ -1,13 +1,17 @@
 package com.pira.ccloud
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.graphics.Typeface
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -16,10 +20,12 @@ import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.widget.FrameLayout
+import kotlin.math.abs
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,11 +39,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BrightnessMedium
 import androidx.compose.material.icons.filled.Forward
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -69,7 +77,9 @@ import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import com.pira.ccloud.data.model.SubtitleSettings
 import com.pira.ccloud.data.model.VideoPlayerSettings
+import com.pira.ccloud.data.model.FontSettings
 import com.pira.ccloud.utils.StorageUtils
+import com.pira.ccloud.ui.theme.FontManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -85,23 +95,28 @@ fun PlayerView.setSubtitleTextSize(spSize: Float) {
     subtitleView?.setFixedTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, pixels)
 }
 
-// Extension function to set subtitle colors
-fun PlayerView.setSubtitleColors(settings: SubtitleSettings) {
-    subtitleView?.setStyle(
-        CaptionStyleCompat(
-            settings.textColor,
-            settings.backgroundColor,
-            settings.borderColor,
-            CaptionStyleCompat.EDGE_TYPE_OUTLINE,
-            settings.borderColor,
-            null // typeface
-        )
+// Extension function to set subtitle colors and font
+fun PlayerView.setSubtitleColors(settings: SubtitleSettings, typeface: Typeface? = null) {
+    // Create a custom CaptionStyleCompat with the typeface
+    val style = CaptionStyleCompat(
+        settings.textColor,
+        settings.backgroundColor,
+        settings.borderColor,
+        CaptionStyleCompat.EDGE_TYPE_OUTLINE,
+        settings.borderColor,
+        typeface
     )
+    subtitleView?.setStyle(style)
+    
+    // Note: ExoPlayer's subtitle rendering has limited support for custom fonts.
+    // The font may not be applied to all subtitle formats or on all Android versions.
+    // This is a known limitation of ExoPlayer's subtitle rendering system.
 }
 
 class VideoPlayerActivity : ComponentActivity() {
     companion object {
         const val EXTRA_VIDEO_URL = "video_url"
+        const val REQUEST_WRITE_SETTINGS = 1001
         
         fun start(context: Context, videoUrl: String) {
             val intent = Intent(context, VideoPlayerActivity::class.java).apply {
@@ -126,6 +141,9 @@ class VideoPlayerActivity : ComponentActivity() {
         // Keep screen on while in video player
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         
+        // Check and request brightness control permission if needed
+        checkAndRequestBrightnessPermission()
+        
         videoUrl = intent.getStringExtra(EXTRA_VIDEO_URL)
         
         if (videoUrl != null) {
@@ -136,6 +154,28 @@ class VideoPlayerActivity : ComponentActivity() {
             }
         } else {
             finish()
+        }
+    }
+    
+    private fun checkAndRequestBrightnessPermission() {
+        // Check if we have permission to write system settings
+        if (!Settings.System.canWrite(this)) {
+            // Request permission to write system settings
+            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+            intent.data = Uri.parse("package:${packageName}")
+            startActivityForResult(intent, REQUEST_WRITE_SETTINGS)
+        }
+    }
+    
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_WRITE_SETTINGS) {
+            // Permission result for writing system settings
+            if (Settings.System.canWrite(this)) {
+                // Permission granted
+            } else {
+                // Permission denied - we'll work with window-level brightness only
+            }
         }
     }
     
@@ -245,13 +285,39 @@ fun VideoPlayerScreen(
     var playerError by remember { mutableStateOf<String?>(null) }
     var showForwardIndicator by remember { mutableStateOf(false) }
     var showRewindIndicator by remember { mutableStateOf(false) }
-    var wasPlayingBeforeSeek by remember { mutableStateOf(false) } // Track if player was playing before seeking
-    var playbackSpeed by remember { mutableStateOf(1.0f) } // Current playback speed (not saved to storage)
-    var showSpeedDropdown by remember { mutableStateOf(false) } // For showing speed selection dropdown
+    var wasPlayingBeforeSeek by remember { mutableStateOf(false) }
+    var playbackSpeed by remember { mutableStateOf(1.0f) }
+    var showSpeedDropdown by remember { mutableStateOf(false) }
+    
+    // Brightness and volume control states
+    var showBrightnessIndicator by remember { mutableStateOf(false) }
+    var showVolumeIndicator by remember { mutableStateOf(false) }
+    var brightnessLevel by remember { mutableStateOf(0f) }
+    var volumeLevel by remember { mutableStateOf(0f) }
     
     // Predefined playback speed options
     val speedOptions = remember {
         listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.5f, 3.0f, 3.5f)
+    }
+    
+    // Load font settings
+    val fontSettings = remember(context) {
+        StorageUtils.loadFontSettings(context)
+    }
+    
+    // Load custom font typeface
+    val customTypeface = remember(fontSettings.fontType) {
+        when (fontSettings.fontType) {
+            com.pira.ccloud.data.model.FontType.DEFAULT -> null
+            com.pira.ccloud.data.model.FontType.VAZIRMATN -> {
+                try {
+                    // Load the Vazirmatn font from assets
+                    Typeface.createFromAsset(context.assets, "font/vazirmatn_regular.ttf")
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        }
     }
     
     // Load video player settings (without affecting playback speed)
@@ -495,6 +561,150 @@ fun VideoPlayerScreen(
                     }
                 )
             }
+            // Add swipe gesture detection for brightness and volume control
+            .pointerInput(Unit) {
+                var initialX = 0f
+                var initialY = 0f
+                var isTracking = false
+                var trackingSide: String? = null // "left" for brightness, "right" for volume
+                var initialBrightness = 0f
+                var initialVolume = 0f
+                
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        initialX = offset.x
+                        initialY = offset.y
+                        isTracking = true
+                        
+                        // Determine which side of the screen the gesture started on
+                        val screenWidth = size.width
+                        if (initialX < screenWidth * 0.5f) {
+                            trackingSide = "left" // Left side for brightness
+                        } else {
+                            trackingSide = "right" // Right side for volume
+                        }
+                        
+                        // Get initial brightness and volume levels
+                        when (trackingSide) {
+                            "left" -> {
+                                val window = (context as Activity).window
+                                val layoutParams = window.attributes
+                                initialBrightness = layoutParams.screenBrightness
+                                if (initialBrightness < 0) {
+                                    // If brightness is set to system default, get the current system brightness
+                                    try {
+                                        val brightnessMode = Settings.System.getInt(
+                                            context.contentResolver,
+                                            Settings.System.SCREEN_BRIGHTNESS_MODE
+                                        )
+                                        if (brightnessMode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
+                                            // For automatic brightness, we'll use a default value
+                                            initialBrightness = 0.5f // Default to 50%
+                                        } else {
+                                            val systemBrightness = Settings.System.getInt(
+                                                context.contentResolver,
+                                                Settings.System.SCREEN_BRIGHTNESS
+                                            )
+                                            initialBrightness = systemBrightness / 255f
+                                        }
+                                    } catch (e: Exception) {
+                                        initialBrightness = 0.5f // Default to 50%
+                                    }
+                                }
+                                brightnessLevel = initialBrightness
+                                showBrightnessIndicator = true
+                            }
+                            "right" -> {
+                                val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                                val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                                val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                                initialVolume = currentVolume.toFloat()
+                                volumeLevel = initialVolume / maxVolume.toFloat()
+                                showVolumeIndicator = true
+                            }
+                        }
+                    },
+                    onDragEnd = {
+                        isTracking = false
+                        trackingSide = null
+                        
+                        // Hide indicators after a delay
+                        CoroutineScope(Dispatchers.Main).launch {
+                            delay(1000)
+                            showBrightnessIndicator = false
+                            showVolumeIndicator = false
+                        }
+                    },
+                    onDragCancel = {
+                        isTracking = false
+                        trackingSide = null
+                        showBrightnessIndicator = false
+                        showVolumeIndicator = false
+                    },
+                    onDrag = { change, dragAmount ->
+                        if (!isTracking) return@detectDragGestures
+                        
+                        val dragY = dragAmount.y
+                        
+                        // Only process vertical drag gestures
+                        if (abs(dragY) > abs(change.position.x - initialX) * 0.5f) {
+                            when (trackingSide) {
+                                "left" -> {
+                                    // Adjust brightness based on vertical drag (up = increase, down = decrease)
+                                    val delta = -dragY * 0.01f // Invert Y axis (up is negative)
+                                    brightnessLevel = (initialBrightness + delta).coerceIn(0f, 1f)
+                                    
+                                    try {
+                                        // Apply brightness change to the current window
+                                        val window = (context as Activity).window
+                                        val layoutParams = window.attributes
+                                        layoutParams.screenBrightness = brightnessLevel
+                                        window.attributes = layoutParams
+                                        
+                                        // Also try to change system brightness if we have permission
+                                        if (Settings.System.canWrite(context)) {
+                                            Settings.System.putInt(
+                                                context.contentResolver,
+                                                Settings.System.SCREEN_BRIGHTNESS,
+                                                (brightnessLevel * 255).toInt()
+                                            )
+                                        }
+                                        
+                                        // Update UI indicator
+                                        showBrightnessIndicator = true
+                                    } catch (e: Exception) {
+                                        // Ignore permission or other errors
+                                    }
+                                }
+                                "right" -> {
+                                    // Adjust volume based on vertical drag (up = increase, down = decrease)
+                                    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                                    val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                                    val delta = -dragY * 0.01f * maxVolume // Invert Y axis (up is negative)
+                                    val newVolume = (initialVolume + delta).coerceIn(0f, maxVolume.toFloat())
+                                    
+                                    try {
+                                        // Apply volume change
+                                        audioManager.setStreamVolume(
+                                            AudioManager.STREAM_MUSIC,
+                                            newVolume.toInt(),
+                                            0 // No flags
+                                        )
+                                        
+                                        // Update volume level for UI indicator
+                                        volumeLevel = newVolume / maxVolume.toFloat()
+                                        
+                                        // Update UI indicator
+                                        showVolumeIndicator = true
+                                    } catch (e: Exception) {
+                                        // Ignore permission or other errors
+                                    }
+                                }
+                            }
+                        }
+                    }
+                )
+            }
     ) {
         // Show error message if player failed to initialize
         if (playerError != null) {
@@ -560,9 +770,9 @@ fun VideoPlayerScreen(
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                     
                     // Apply subtitle settings to the player view
-                    // Set subtitle styling
+                    // Set subtitle styling with custom font
                     setSubtitleTextSize(subtitleSettings.textSize)
-                    setSubtitleColors(subtitleSettings)
+                    setSubtitleColors(subtitleSettings, customTypeface)
                 }
             },
             modifier = Modifier.fillMaxSize(),
@@ -570,7 +780,7 @@ fun VideoPlayerScreen(
                 // Update the player view when subtitle settings change
                 // Update subtitle styling when settings change
                 playerView.setSubtitleTextSize(subtitleSettings.textSize)
-                playerView.setSubtitleColors(subtitleSettings)
+                playerView.setSubtitleColors(subtitleSettings, customTypeface)
             }
         )
         
@@ -619,6 +829,64 @@ fun VideoPlayerScreen(
                     )
                     Text(
                         text = "${videoPlayerSettings.seekTimeSeconds}s",
+                        color = Color.White,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+        }
+        
+        // Brightness indicator
+        if (showBrightnessIndicator) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.BrightnessMedium,
+                        contentDescription = "Brightness",
+                        tint = Color.White,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Text(
+                        text = "${(brightnessLevel * 100).toInt()}%",
+                        color = Color.White,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+        }
+        
+        // Volume indicator
+        if (showVolumeIndicator) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.VolumeUp,
+                        contentDescription = "Volume",
+                        tint = Color.White,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Text(
+                        text = "${(volumeLevel * 100).toInt()}%",
                         color = Color.White,
                         modifier = Modifier.padding(top = 8.dp)
                     )
@@ -731,7 +999,8 @@ fun VideoPlayerScreen(
                         Text(
                             text = formatTime(currentPosition),
                             color = Color.White,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontManager.loadFontFamily(context, fontSettings.fontType)
                         )
                         
                         Spacer(modifier = Modifier.weight(1f))
@@ -763,7 +1032,8 @@ fun VideoPlayerScreen(
                                         color = Color.White,
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 4.dp)
+                                        modifier = Modifier.padding(horizontal = 4.dp),
+                                        fontFamily = FontManager.loadFontFamily(context, fontSettings.fontType)
                                     )
                                 }
                                 
@@ -777,7 +1047,8 @@ fun VideoPlayerScreen(
                                             text = {
                                                 Text(
                                                     text = String.format("%.2fx", speed),
-                                                    color = if (speed == playbackSpeed) MaterialTheme.colorScheme.primary else Color.White
+                                                    color = if (speed == playbackSpeed) MaterialTheme.colorScheme.primary else Color.White,
+                                                    fontFamily = FontManager.loadFontFamily(context, fontSettings.fontType)
                                                 )
                                             },
                                             onClick = {
@@ -799,14 +1070,16 @@ fun VideoPlayerScreen(
                                 fontWeight = if (playbackSpeed == 1.0f) FontWeight.Bold else FontWeight.Normal,
                                 modifier = Modifier
                                     .clickable { playbackSpeed = 1.0f }
-                                    .padding(4.dp)
+                                    .padding(4.dp),
+                                fontFamily = FontManager.loadFontFamily(context, fontSettings.fontType)
                             )
                         }
                         
                         Text(
                             text = formatTime(duration),
                             color = Color.White,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontManager.loadFontFamily(context, fontSettings.fontType)
                         )
                     }
                 }

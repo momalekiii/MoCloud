@@ -1,6 +1,7 @@
 package com.pira.ccloud.data.repository
 
 import com.pira.ccloud.data.model.Country
+import com.pira.ccloud.data.model.FilterType
 import com.pira.ccloud.data.model.Genre
 import com.pira.ccloud.data.model.Series
 import kotlinx.coroutines.Dispatchers
@@ -12,12 +13,12 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 class SeriesRepository : BaseRepository() {
-    private val BASE_URL = "https://hostinnegar.com/api/serie/by/filtres/0/created"
+    private val BASE_URL = "https://hostinnegar.com/api/serie/by/filtres"
     
-    suspend fun getSeries(page: Int = 0): List<Series> {
+    suspend fun getSeries(page: Int = 0, genreId: Int = 0, filterType: FilterType = FilterType.DEFAULT): List<Series> {
         return withContext(Dispatchers.IO) {
             try {
-                val url = "$BASE_URL/$page/$API_KEY"
+                val url = buildUrl(BASE_URL, genreId, filterType, page)
                 
                 val jsonData = executeRequest(url) { Request.Builder().url(it).build() }
                 
@@ -25,6 +26,14 @@ class SeriesRepository : BaseRepository() {
             } catch (e: Exception) {
                 throw Exception("Error fetching series: ${e.message}")
             }
+        }
+    }
+    
+    private fun buildUrl(baseUrl: String, genreId: Int, filterType: FilterType, page: Int): String {
+        return when (filterType) {
+            FilterType.DEFAULT -> "$baseUrl/$genreId/created/$page/$API_KEY"
+            FilterType.BY_YEAR -> "$baseUrl/$genreId/year/$page/$API_KEY"
+            FilterType.BY_IMDB -> "$baseUrl/$genreId/imdb/$page/$API_KEY"
         }
     }
     

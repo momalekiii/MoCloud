@@ -90,7 +90,7 @@ fun BottomNavigationBar(navController: NavController) {
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.height(2.dp))
+                        // Spacer(modifier = Modifier.height(1.dp))
                         Text(
                             text = stringResource(screen.resourceId),
                             color = textColor,

@@ -190,22 +190,77 @@ fun MovieDetailsContent(
                     )
             )
             
-            // Foreground movie poster
-            Image(
-                painter = rememberAsyncImagePainter(
-                    ImageRequest.Builder(LocalContext.current)
-                        .data(movie.image)
-                        .crossfade(true)
-                        .build()
-                ),
-                contentDescription = movie.title,
+            // Row to contain poster and movie details side by side
+            Row(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 16.dp, bottom = 16.dp)
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Fit
-            )
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                // Foreground movie poster
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        ImageRequest.Builder(LocalContext.current)
+                            .data(movie.image)
+                            .crossfade(true)
+                            .build()
+                    ),
+                    contentDescription = movie.title,
+                    modifier = Modifier
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Fit
+                )
+                
+                // Movie details to the right of the poster
+                Column(
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .weight(1f)
+                ) {
+                    // Movie title
+                    Text(
+                        text = movie.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    // Country and year
+                    val countryText = if (movie.country.isNotEmpty()) {
+                        "${movie.country.joinToString(", ") { it.title }} (${movie.year})"
+                    } else {
+                        "(${movie.year})"
+                    }
+                    
+                    Text(
+                        text = countryText,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    // Rating
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Rating",
+                            tint = Color.Yellow,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        
+                        Spacer(modifier = Modifier.width(8.dp))
+                        
+                        Text(
+                            text = String.format("%.1f", movie.imdb),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
             
             // Back button
             IconButton(
@@ -271,51 +326,6 @@ fun MovieDetailsContent(
                     tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                 )
             }
-        }
-        
-        // Movie title with country and year
-        Text(
-            text = movie.title,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-        
-        // Country and year
-        val countryText = if (movie.country.isNotEmpty()) {
-            "${movie.country.joinToString(", ") { it.title }} (${movie.year})"
-        } else {
-            "(${movie.year})"
-        }
-        
-        Text(
-            text = countryText,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-        
-        // Rating
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "Rating",
-                tint = Color.Yellow,
-                modifier = Modifier.size(24.dp)
-            )
-            
-            Spacer(modifier = Modifier.width(8.dp))
-            
-            Text(
-                text = String.format("%.1f", movie.imdb),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
         }
         
         // Genres

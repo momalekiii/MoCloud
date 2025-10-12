@@ -67,7 +67,7 @@ sealed class AppScreens(
         route = "favorites",
         resourceId = R.string.favorites,
         icon = Icons.Default.Favorite,
-        showBottomBar = false,
+        showBottomBar = true,
         showSidebar = true
     )
 
@@ -75,6 +75,13 @@ sealed class AppScreens(
         route = "about",
         resourceId = R.string.about,
         icon = Icons.Default.Info,
+        showBottomBar = false,
+        showSidebar = false
+    )
+    
+    data object Country : AppScreens(
+        route = "country/{countryId}",
+        resourceId = R.string.country,
         showBottomBar = false,
         showSidebar = false
     )

@@ -63,6 +63,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.pira.ccloud.components.GenreFilterSection
+import com.pira.ccloud.data.model.Genre
 import com.pira.ccloud.data.model.Series
 import com.pira.ccloud.ui.series.SeriesViewModel
 import com.pira.ccloud.utils.DeviceUtils
@@ -77,6 +79,9 @@ fun SeriesScreen(
     val isLoading = viewModel.isLoading
     val isLoadingMore = viewModel.isLoadingMore
     val errorMessage = viewModel.errorMessage
+    val genres = viewModel.genres
+    val selectedGenreId = viewModel.selectedGenreId
+    val selectedFilterType = viewModel.selectedFilterType
     
     LaunchedEffect(Unit) {
         if (series.isEmpty()) {
@@ -84,29 +89,40 @@ fun SeriesScreen(
         }
     }
     
-    // Remove Column wrapper to use full screen space
-    when {
-        isLoading && series.isEmpty() -> {
-            // Show modern loading animation when initial series are loading
-            LoadingScreenSeries()
-        }
-        errorMessage != null && series.isEmpty() -> {
-            ErrorScreenSeries(
-                errorMessage = errorMessage,
-                onRetry = { viewModel.retry() }
-            )
-        }
-        else -> {
-            SeriesGrid(
-                series = series,
-                isLoading = isLoading,
-                isLoadingMore = isLoadingMore,
-                errorMessage = errorMessage,
-                onRetry = { viewModel.retry() },
-                onRefresh = { viewModel.refresh() },
-                onLoadMore = { viewModel.loadMoreSeries() },
-                navController = navController
-            )
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Genre filter section
+        GenreFilterSection(
+            genres = genres,
+            selectedGenreId = selectedGenreId,
+            selectedFilterType = selectedFilterType,
+            onGenreSelected = { genreId -> viewModel.selectGenre(genreId) },
+            onFilterTypeSelected = { filterType -> viewModel.selectFilterType(filterType) }
+        )
+        
+        // Remove Column wrapper to use full screen space
+        when {
+            isLoading && series.isEmpty() -> {
+                // Show modern loading animation when initial series are loading
+                LoadingScreenSeries()
+            }
+            errorMessage != null && series.isEmpty() -> {
+                ErrorScreenSeries(
+                    errorMessage = errorMessage,
+                    onRetry = { viewModel.retry() }
+                )
+            }
+            else -> {
+                SeriesGrid(
+                    series = series,
+                    isLoading = isLoading,
+                    isLoadingMore = isLoadingMore,
+                    errorMessage = errorMessage,
+                    onRetry = { viewModel.retry() },
+                    onRefresh = { viewModel.refresh() },
+                    onLoadMore = { viewModel.loadMoreSeries() },
+                    navController = navController
+                )
+            }
         }
     }
 }

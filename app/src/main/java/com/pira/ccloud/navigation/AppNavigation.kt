@@ -16,17 +16,21 @@ import com.pira.ccloud.screens.SingleMovieScreen
 import com.pira.ccloud.screens.SingleSeriesScreen
 import com.pira.ccloud.screens.SplashScreen
 import com.pira.ccloud.screens.FavoritesScreen
+import com.pira.ccloud.screens.CountryScreen
 import com.pira.ccloud.ui.movies.MoviesViewModel
 import com.pira.ccloud.ui.search.SearchViewModel
 import com.pira.ccloud.ui.series.SeriesViewModel
+import com.pira.ccloud.ui.country.CountryViewModel
 import com.pira.ccloud.ui.theme.ThemeSettings
 import com.pira.ccloud.ui.theme.ThemeManager
+import com.pira.ccloud.data.model.FontSettings // Add this import
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    onThemeSettingsChanged: (ThemeSettings) -> Unit = {}
+    onThemeSettingsChanged: (ThemeSettings) -> Unit = {},
+    onFontSettingsChanged: (FontSettings) -> Unit = {} // Add this parameter
 ) {
     val context = LocalContext.current
     val themeManager = ThemeManager(context)
@@ -36,6 +40,7 @@ fun AppNavigation(
     val moviesViewModel = viewModel<MoviesViewModel>()
     val seriesViewModel = viewModel<SeriesViewModel>()
     val searchViewModel = viewModel<SearchViewModel>()
+    val countryViewModel = viewModel<CountryViewModel>()
     
     NavHost(
         navController = navController,
@@ -68,7 +73,7 @@ fun AppNavigation(
             SearchScreen(viewModel = searchViewModel, navController = navController)
         }
         composable(route = AppScreens.Settings.route) {
-            SettingsScreen(onThemeSettingsChanged, navController)
+            SettingsScreen(onThemeSettingsChanged, onFontSettingsChanged, navController) // Pass font settings callback
         }
         composable(route = AppScreens.Favorites.route) {
             FavoritesScreen(navController)
@@ -79,7 +84,7 @@ fun AppNavigation(
         composable(
             route = AppScreens.SingleMovie.route,
             arguments = listOf(navArgument("movieId") { defaultValue = "0" })
-        ) { backStackEntry ->
+        ) { backStackEntry ->            
             val movieId = backStackEntry.arguments?.getString("movieId")?.toIntOrNull() ?: 0
             SingleMovieScreen(movieId = movieId, navController = navController)
         }
@@ -89,6 +94,13 @@ fun AppNavigation(
         ) { backStackEntry ->
             val seriesId = backStackEntry.arguments?.getString("seriesId")?.toIntOrNull() ?: 0
             SingleSeriesScreen(seriesId = seriesId, navController = navController)
+        }
+        composable(
+            route = AppScreens.Country.route,
+            arguments = listOf(navArgument("countryId") { defaultValue = "0" })
+        ) { backStackEntry ->
+            val countryId = backStackEntry.arguments?.getString("countryId")?.toIntOrNull() ?: 0
+            CountryScreen(countryId = countryId, viewModel = countryViewModel, navController = navController)
         }
     }
 }
