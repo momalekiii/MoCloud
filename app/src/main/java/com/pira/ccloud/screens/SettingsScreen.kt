@@ -163,7 +163,7 @@ fun SettingsScreen(
         val defaultSettings = ThemeSettings()
         updateThemeSettings(defaultSettings)
         // Reset subtitle settings to default as well
-        val defaultSubtitleSettings = SubtitleSettings.DEFAULT
+        val defaultSubtitleSettings = SubtitleSettings.getDefaultSettings(context)
         updateSubtitleSettings(defaultSubtitleSettings)
         // Reset video player settings to default as well
         val defaultVideoPlayerSettings = VideoPlayerSettings.DEFAULT
@@ -553,19 +553,6 @@ fun SettingsScreen(
                                     style = MaterialTheme.typography.titleMedium,
                                     modifier = Modifier.padding(bottom = 12.dp)
                                 )
-                                
-                                // Background color setting
-                                SubtitleColorSetting(
-                                    title = "Background Color",
-                                    currentColor = Color(subtitleSettings.backgroundColor),
-                                    onColorSelected = { color ->
-                                        updateSubtitleSettings(subtitleSettings.copy(backgroundColor = color.toArgb()))
-                                    },
-                                    noColorOption = true,
-                                    glassBackgroundOption = true
-                                )
-                                
-                                Spacer(modifier = Modifier.height(12.dp))
                                 
                                 // Text color setting
                                 SubtitleColorSetting(
@@ -1175,8 +1162,8 @@ fun SubtitleColorSetting(
                 if (glassBackgroundOption) {
                     ColorOptionButton(
                         color = Color.Black.copy(alpha = 0.5f),
-                        isSelected = currentColor == Color(SubtitleSettings.GLASS_BACKGROUND),
-                        onClick = { onColorSelected(Color(SubtitleSettings.GLASS_BACKGROUND)) },
+                        isSelected = currentColor == Color.Black.copy(alpha = 0.5f),
+                        onClick = { onColorSelected(Color.Black.copy(alpha = 0.5f)) },
                         label = "Glass"
                     )
                 }

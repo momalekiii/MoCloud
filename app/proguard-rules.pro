@@ -19,3 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# ExoPlayer specific rules
+-keep class androidx.media3.** { *; }
+-dontwarn androidx.media3.**
+
+# Kotlin serialization
+-keep class com.pira.ccloud.data.model.** { *; }
