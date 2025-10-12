@@ -34,4 +34,15 @@ data class FavoriteGroup(
     fun removeSeries(seriesId: Int) {
         seriesIds.remove(seriesId)
     }
+    
+    // Copy function for renaming
+    fun copy(name: String = this.name): FavoriteGroup {
+        return FavoriteGroup(
+            id = this.id,
+            name = name,
+            isDefault = this.isDefault,
+            movieIds = this.movieIds.toMutableList(),
+            seriesIds = this.seriesIds.toMutableList()
+        )
+    }
 }

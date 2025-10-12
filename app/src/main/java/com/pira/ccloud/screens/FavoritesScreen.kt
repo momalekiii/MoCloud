@@ -133,7 +133,7 @@ fun FavoritesScreen(navController: NavController) {
                             if (groupName.isNotBlank()) {
                                 // Check if group with same name already exists
                                 val existingGroup = groups.find { 
-                                    it.name.equals(groupName, ignoreCase = true) 
+                                    it.name.equals(groupName, ignoreCase = true) && !it.isDefault
                                 }
                                 
                                 if (existingGroup == null) {
@@ -171,7 +171,7 @@ fun FavoritesScreen(navController: NavController) {
                         if (groupName.isNotBlank()) {
                             // Check if group with same name already exists
                             val existingGroup = groups.find { 
-                                it.name.equals(groupName, ignoreCase = true) 
+                                it.name.equals(groupName, ignoreCase = true) && !it.isDefault
                             }
                             
                             if (existingGroup == null) {
@@ -208,6 +208,165 @@ fun FavoritesScreen(navController: NavController) {
             dismissButton = {
                 TextButton(
                     onClick = { showCreateGroupDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Dialog for renaming a group
+    var showRenameGroupDialog by remember { mutableStateOf(false) }
+    var groupToRename by remember { mutableStateOf<FavoriteGroup?>(null) }
+    var newGroupName by remember { mutableStateOf("") }
+    
+    if (showRenameGroupDialog && groupToRename != null) {
+        AlertDialog(
+            onDismissRequest = { showRenameGroupDialog = false },
+            title = { Text("Rename Playlist") },
+            text = {
+                OutlinedTextField(
+                    value = newGroupName,
+                    onValueChange = { newGroupName = it },
+                    label = { Text("New Playlist Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (newGroupName.isNotBlank() && groupToRename != null) {
+                                // Check if another group with same name already exists
+                                val existingGroup = groups.find { 
+                                    it.id != groupToRename!!.id && 
+                                    it.name.equals(newGroupName, ignoreCase = true) && 
+                                    !it.isDefault
+                                }
+                                
+                                if (existingGroup == null) {
+                                    val updatedGroup = groupToRename!!.copy(name = newGroupName)
+                                    StorageUtils.saveFavoriteGroup(context, updatedGroup)
+                                    groups = StorageUtils.loadAllFavoriteGroups(context)
+                                    showRenameGroupDialog = false
+                                    groupToRename = null
+                                    newGroupName = ""
+                                    // Show success message
+                                    android.widget.Toast.makeText(
+                                        context, 
+                                        "Playlist renamed successfully", 
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    // Show error message
+                                    android.widget.Toast.makeText(
+                                        context, 
+                                        "A playlist with this name already exists", 
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        }
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newGroupName.isNotBlank() && groupToRename != null) {
+                            // Check if another group with same name already exists
+                            val existingGroup = groups.find { 
+                                it.id != groupToRename!!.id && 
+                                it.name.equals(newGroupName, ignoreCase = true) && 
+                                !it.isDefault
+                            }
+                            
+                            if (existingGroup == null) {
+                                val updatedGroup = groupToRename!!.copy(name = newGroupName)
+                                StorageUtils.saveFavoriteGroup(context, updatedGroup)
+                                groups = StorageUtils.loadAllFavoriteGroups(context)
+                                showRenameGroupDialog = false
+                                groupToRename = null
+                                newGroupName = ""
+                                // Show success message
+                                android.widget.Toast.makeText(
+                                    context, 
+                                    "Playlist renamed successfully", 
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                // Show error message
+                                android.widget.Toast.makeText(
+                                    context, 
+                                    "A playlist with this name already exists", 
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    },
+                    enabled = newGroupName.isNotBlank()
+                ) {
+                    Text("Rename")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { 
+                        showRenameGroupDialog = false
+                        groupToRename = null
+                        newGroupName = ""
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Dialog for deleting a group
+    var showDeleteGroupDialog by remember { mutableStateOf(false) }
+    var groupToDelete by remember { mutableStateOf<FavoriteGroup?>(null) }
+    
+    if (showDeleteGroupDialog && groupToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteGroupDialog = false },
+            title = { Text("Delete Playlist") },
+            text = { 
+                Text("Are you sure you want to delete the playlist \"${groupToDelete!!.name}\"? This action cannot be undone.") 
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (groupToDelete != null) {
+                            StorageUtils.removeFavoriteGroup(context, groupToDelete!!.id)
+                            groups = StorageUtils.loadAllFavoriteGroups(context)
+                            
+                            // If the deleted group was the selected group, switch to default
+                            if (selectedGroup?.id == groupToDelete!!.id) {
+                                selectedGroup = groups.firstOrNull { it.isDefault }
+                                favorites = StorageUtils.loadAllFavorites(context)
+                            }
+                            
+                            showDeleteGroupDialog = false
+                            groupToDelete = null
+                            // Show success message
+                            android.widget.Toast.makeText(
+                                context, 
+                                "Playlist deleted successfully", 
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { 
+                        showDeleteGroupDialog = false
+                        groupToDelete = null
+                    }
                 ) {
                     Text("Cancel")
                 }
@@ -363,30 +522,74 @@ fun FavoritesScreen(navController: NavController) {
                 horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
             ) {
                 items(groups) { group ->
-                    Card(
-                        modifier = Modifier
-                            .padding(vertical = 4.dp)
-                            .clickable {
-                                selectedGroup = group
-                                // Load favorites for this group
-                                favorites = if (group.isDefault) {
-                                    StorageUtils.loadAllFavorites(context)
-                                } else {
-                                    StorageUtils.getFavoritesInGroup(context, group.id)
+                    Box {
+                        var showGroupMenu by remember { mutableStateOf(false) }
+                        
+                        Card(
+                            modifier = Modifier
+                                .padding(vertical = 4.dp)
+                                .clickable {
+                                    selectedGroup = group
+                                    // Load favorites for this group
+                                    favorites = if (group.isDefault) {
+                                        StorageUtils.loadAllFavorites(context)
+                                    } else {
+                                        StorageUtils.getFavoritesInGroup(context, group.id)
+                                    }
+                                },
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = if (selectedGroup?.id == group.id) 4.dp else 0.dp),
+                            colors = if (selectedGroup?.id == group.id) {
+                                CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                            } else {
+                                CardDefaults.cardColors()
+                            }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = group.name)
+                                
+                                // Show menu icon for non-default groups
+                                if (!group.isDefault) {
+                                    IconButton(
+                                        onClick = { showGroupMenu = true },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.MoreVert,
+                                            contentDescription = "Group options",
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
                                 }
-                            },
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = if (selectedGroup?.id == group.id) 4.dp else 0.dp),
-                        colors = if (selectedGroup?.id == group.id) {
-                            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                        } else {
-                            CardDefaults.cardColors()
+                            }
                         }
-                    ) {
-                        Text(
-                            text = group.name,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                        )
+                        
+                        // Group menu for rename/delete options
+                        DropdownMenu(
+                            expanded = showGroupMenu,
+                            onDismissRequest = { showGroupMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Rename") },
+                                onClick = {
+                                    groupToRename = group
+                                    newGroupName = group.name
+                                    showRenameGroupDialog = true
+                                    showGroupMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Delete") },
+                                onClick = {
+                                    groupToDelete = group
+                                    showDeleteGroupDialog = true
+                                    showGroupMenu = false
+                                }
+                            )
+                        }
                     }
                 }
             }
