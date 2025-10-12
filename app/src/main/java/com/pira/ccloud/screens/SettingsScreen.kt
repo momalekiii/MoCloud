@@ -243,32 +243,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .padding(16.dp)
             .focusRequester(focusRequester)
-            .focusable()
-            .onKeyEvent { keyEvent ->
-                when (keyEvent.key) {
-                    Key.DirectionDown -> {
-                        // Handle down navigation if needed
-                        false // Let default handling occur
-                    }
-                    Key.DirectionUp -> {
-                        // Handle up navigation if needed
-                        false // Let default handling occur
-                    }
-                    Key.DirectionLeft -> {
-                        // Handle left navigation if needed
-                        false // Let default handling occur
-                    }
-                    Key.DirectionRight -> {
-                        // Handle right navigation if needed
-                        false // Let default handling occur
-                    }
-                    Key.Enter, Key.Spacebar -> {
-                        // Handle select/enter key if needed
-                        false // Let default handling occur
-                    }
-                    else -> false // Let default handling occur
-                }
-            }
+            .focusable(),
     ) {
         item {
             AnimatedVisibility(

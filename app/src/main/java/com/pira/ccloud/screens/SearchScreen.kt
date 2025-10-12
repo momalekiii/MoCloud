@@ -86,6 +86,11 @@ fun SearchScreen(
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
     
+    // Request focus when the screen is first displayed to ensure keyboard opens on TV
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -97,7 +102,11 @@ fun SearchScreen(
             onValueChange = { viewModel.updateSearchQuery(it) },
             modifier = Modifier
                 .fillMaxWidth()
-                .focusRequester(focusRequester),
+                .focusRequester(focusRequester)
+                .clickable { 
+                    // Ensure keyboard opens when clicking on the TextField on TV
+                    focusRequester.requestFocus()
+                },
             placeholder = { 
                 Text(
                     text = "Search movies and series...",
