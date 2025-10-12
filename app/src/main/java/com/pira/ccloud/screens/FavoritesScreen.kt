@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,16 +18,23 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,19 +53,29 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.pira.ccloud.R
+import com.pira.ccloud.data.model.FavoriteGroup
 import com.pira.ccloud.data.model.FavoriteItem
 import com.pira.ccloud.navigation.AppScreens
 import com.pira.ccloud.utils.StorageUtils
+import java.util.UUID
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreen(navController: NavController) {
     var favorites by remember { mutableStateOf<List<FavoriteItem>>(emptyList()) }
+    var groups by remember { mutableStateOf<List<FavoriteGroup>>(emptyList()) }
+    var selectedGroup by remember { mutableStateOf<FavoriteGroup?>(null) }
     val context = LocalContext.current
     var showDeleteAllDialog by remember { mutableStateOf(false) }
+    var showCreateGroupDialog by remember { mutableStateOf(false) }
+    var showMoveToGroupDialog by remember { mutableStateOf(false) }
+    var selectedItem by remember { mutableStateOf<FavoriteItem?>(null) }
     
-    // Load favorites when screen is displayed
+    // Load favorites and groups when screen is displayed
     LaunchedEffect(Unit) {
         favorites = StorageUtils.loadAllFavorites(context)
+        groups = StorageUtils.loadAllFavoriteGroups(context)
+        selectedGroup = groups.firstOrNull { it.isDefault } ?: groups.firstOrNull()
     }
     
     // Confirmation dialog for deleting all favorites
@@ -89,33 +107,183 @@ fun FavoritesScreen(navController: NavController) {
         )
     }
     
+    // Dialog for creating a new group
+    if (showCreateGroupDialog) {
+        var groupName by remember { mutableStateOf("") }
+        
+        AlertDialog(
+            onDismissRequest = { showCreateGroupDialog = false },
+            title = { Text("Create New Playlist") },
+            text = {
+                OutlinedTextField(
+                    value = groupName,
+                    onValueChange = { groupName = it },
+                    label = { Text("Playlist Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (groupName.isNotBlank()) {
+                            val newGroup = FavoriteGroup(
+                                id = UUID.randomUUID().toString(),
+                                name = groupName,
+                                isDefault = false
+                            )
+                            StorageUtils.saveFavoriteGroup(context, newGroup)
+                            groups = StorageUtils.loadAllFavoriteGroups(context)
+                            showCreateGroupDialog = false
+                            groupName = ""
+                        }
+                    },
+                    enabled = groupName.isNotBlank()
+                ) {
+                    Text("Create")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showCreateGroupDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Dialog for moving item to a group
+    if (showMoveToGroupDialog && selectedItem != null) {
+        val item = selectedItem!!
+        AlertDialog(
+            onDismissRequest = { showMoveToGroupDialog = false },
+            title = { Text("Move to Playlist") },
+            text = {
+                LazyColumn {
+                    items(groups.filter { !it.isDefault }) { group ->
+                        androidx.compose.material3.RadioButton(
+                            selected = selectedGroup?.id == group.id,
+                            onClick = {
+                                StorageUtils.addFavoriteToGroup(context, group.id, item.id, item.type)
+                                selectedGroup = group
+                                favorites = if (selectedGroup != null) {
+                                    StorageUtils.getFavoritesInGroup(context, selectedGroup!!.id)
+                                } else {
+                                    StorageUtils.loadAllFavorites(context)
+                                }
+                                showMoveToGroupDialog = false
+                            }
+                        )
+                        Text(
+                            text = group.name,
+                            modifier = Modifier
+                                .padding(start = 16.dp)
+                                .clickable {
+                                    StorageUtils.addFavoriteToGroup(context, group.id, item.id, item.type)
+                                    selectedGroup = group
+                                    favorites = if (selectedGroup != null) {
+                                        StorageUtils.getFavoritesInGroup(context, selectedGroup!!.id)
+                                    } else {
+                                        StorageUtils.loadAllFavorites(context)
+                                    }
+                                    showMoveToGroupDialog = false
+                                }
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { showMoveToGroupDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Header without back button
+        // Top App Bar
+        TopAppBar(
+            title = {
+                Text(
+                    text = selectedGroup?.name ?: stringResource(R.string.favorites),
+                    style = MaterialTheme.typography.headlineMedium
+                )
+            },
+            actions = {
+                // Create group button
+                IconButton(
+                    onClick = { showCreateGroupDialog = true }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Create Playlist"
+                    )
+                }
+                
+                // Delete all button (only show if there are favorites)
+                if (favorites.isNotEmpty()) {
+                    IconButton(
+                        onClick = { showDeleteAllDialog = true }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete All"
+                        )
+                    }
+                }
+            }
+        )
+        
+        // Group selector
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(R.string.favorites),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 16.dp)
+                text = "Playlists:",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
             )
             
-            // Delete all button (only show if there are favorites)
-            if (favorites.isNotEmpty()) {
-                IconButton(
-                    onClick = { showDeleteAllDialog = true }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete All"
-                    )
+            Spacer(modifier = Modifier.width(8.dp))
+            
+            // Display groups as selectable chips
+            androidx.compose.foundation.lazy.LazyRow(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+            ) {
+                items(groups) { group ->
+                    Card(
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .clickable {
+                                selectedGroup = group
+                                // Load favorites for this group
+                                favorites = if (group.isDefault) {
+                                    StorageUtils.loadAllFavorites(context)
+                                } else {
+                                    StorageUtils.getFavoritesInGroup(context, group.id)
+                                }
+                            },
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = if (selectedGroup?.id == group.id) 4.dp else 0.dp),
+                        colors = if (selectedGroup?.id == group.id) {
+                            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                        } else {
+                            CardDefaults.cardColors()
+                        }
+                    ) {
+                        Text(
+                            text = group.name,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                        )
+                    }
                 }
             }
         }
@@ -139,6 +307,13 @@ fun FavoritesScreen(navController: NavController) {
                             .padding(bottom = 16.dp)
                     )
                     Text(text = "No favorites yet")
+                    if (selectedGroup?.isDefault == false) {
+                        Text(
+                            text = "Add items to this playlist by moving them from the default Favorites playlist",
+                            modifier = Modifier.padding(top = 8.dp),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
         } else {
@@ -169,9 +344,17 @@ fun FavoritesScreen(navController: NavController) {
                         onDelete = {
                             StorageUtils.removeFavorite(context, favorite.id, favorite.type)
                             // Refresh the favorites list
-                            favorites = StorageUtils.loadAllFavorites(context)
+                            favorites = if (selectedGroup != null && !selectedGroup!!.isDefault) {
+                                StorageUtils.getFavoritesInGroup(context, selectedGroup!!.id)
+                            } else {
+                                StorageUtils.loadAllFavorites(context)
+                            }
                             // Show toast
                             android.widget.Toast.makeText(context, "Removed from favorites", android.widget.Toast.LENGTH_SHORT).show()
+                        },
+                        onMoveToGroup = { item ->
+                            selectedItem = item
+                            showMoveToGroupDialog = true
                         }
                     )
                 }
@@ -184,8 +367,11 @@ fun FavoritesScreen(navController: NavController) {
 fun FavoriteItemCard(
     favorite: FavoriteItem,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onMoveToGroup: (FavoriteItem) -> Unit
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -250,15 +436,36 @@ fun FavoriteItemCard(
                 }
             }
             
-            // Delete button for individual item
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete"
-                )
+            // Menu button for additional actions
+            Box {
+                IconButton(
+                    onClick = { showMenu = true }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "More options"
+                    )
+                }
+                
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Move to Playlist") },
+                        onClick = {
+                            onMoveToGroup(favorite)
+                            showMenu = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Delete") },
+                        onClick = {
+                            onDelete()
+                            showMenu = false
+                        }
+                    )
+                }
             }
         }
     }
