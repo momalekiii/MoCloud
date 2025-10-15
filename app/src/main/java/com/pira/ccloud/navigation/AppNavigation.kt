@@ -1,5 +1,6 @@
 package com.pira.ccloud.navigation
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,6 +48,7 @@ fun AppNavigation(
         startDestination = AppScreens.Splash.route
     ) {
         composable(route = AppScreens.Splash.route) {
+            val isSystemInDarkMode = isSystemInDarkTheme()
             SplashScreen(
                 onTimeout = {
                     navController.popBackStack()
@@ -55,10 +57,20 @@ fun AppNavigation(
                         launchSingleTop = true
                     }
                 },
-                backgroundColor = if (themeSettings.themeMode == com.pira.ccloud.ui.theme.ThemeMode.DARK) {
-                    androidx.compose.ui.graphics.Color(0xFF121212)
-                } else {
-                    androidx.compose.ui.graphics.Color(0xFFFFFBFE)
+                backgroundColor = when (themeSettings.themeMode) {
+                    com.pira.ccloud.ui.theme.ThemeMode.DARK -> {
+                        androidx.compose.ui.graphics.Color(0xFF121212)
+                    }
+                    com.pira.ccloud.ui.theme.ThemeMode.LIGHT -> {
+                        androidx.compose.ui.graphics.Color(0xFFFFFBFE)
+                    }
+                    com.pira.ccloud.ui.theme.ThemeMode.SYSTEM -> {
+                        if (isSystemInDarkMode) {
+                            androidx.compose.ui.graphics.Color(0xFF121212)
+                        } else {
+                            androidx.compose.ui.graphics.Color(0xFFFFFBFE)
+                        }
+                    }
                 }
             )
         }

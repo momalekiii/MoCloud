@@ -436,11 +436,11 @@ object StorageUtils {
                 val jsonString = file.readText()
                 Json.decodeFromString<SubtitleSettings>(jsonString)
             } else {
-                SubtitleSettings.DEFAULT
+                SubtitleSettings.getDefaultSettings(context)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error loading subtitle settings from file", e)
-            SubtitleSettings.DEFAULT
+            SubtitleSettings.getDefaultSettings(context)
         }
     }
     
