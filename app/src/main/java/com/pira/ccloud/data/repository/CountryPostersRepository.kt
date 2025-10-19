@@ -9,7 +9,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class CountryPostersRepository : BaseRepository() {
-    private val BASE_URL = "https://hostinnegar.com/api/poster/by/filtres"
+    private val BASE_URL = "https://server-hi-speed-iran.info/api/poster/by/filtres"
     
     suspend fun getPostersByCountry(countryId: Int, page: Int = 0, filterType: FilterType = FilterType.DEFAULT): List<Poster> {
         return withContext(Dispatchers.IO) {

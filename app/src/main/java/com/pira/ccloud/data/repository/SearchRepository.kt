@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
 class SearchRepository : BaseRepository() {
-    private val BASE_URL = "https://hostinnegar.com/api/search"
+    private val BASE_URL = "https://server-hi-speed-iran.info/api/search"
     
     suspend fun search(query: String): SearchResult {
         return withContext(Dispatchers.IO) {
