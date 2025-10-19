@@ -16,7 +16,7 @@ open class BaseRepository {
     
     // Helper servers array
     protected val helperServers = arrayOf(
-        "https://server-hi-speed-iran.info"
+        "https://hostinnegar.com"
     )
     
     protected suspend fun executeRequest(
