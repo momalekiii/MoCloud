@@ -8,7 +8,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class CountryRepository : BaseRepository() {
-    private val BASE_URL = "https://hostinnegar.com/api/country/all"
+    private val BASE_URL = "https://server-hi-speed-iran.info/api/country/all"
     
     suspend fun getAllCountries(): List<Country> {
         return withContext(Dispatchers.IO) {
