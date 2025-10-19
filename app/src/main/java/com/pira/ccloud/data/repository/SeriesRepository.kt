@@ -13,7 +13,7 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 class SeriesRepository : BaseRepository() {
-    private val BASE_URL = "https://hostinnegar.com/api/serie/by/filtres"
+    private val BASE_URL = "https://server-hi-speed-iran.info/api/serie/by/filtres"
     
     suspend fun getSeries(page: Int = 0, genreId: Int = 0, filterType: FilterType = FilterType.DEFAULT): List<Series> {
         return withContext(Dispatchers.IO) {
