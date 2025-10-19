@@ -14,7 +14,7 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 class MovieRepository : BaseRepository() {
-    private val BASE_URL = "https://hostinnegar.com/api/movie/by/filtres"
+    private val BASE_URL = "https://server-hi-speed-iran.info/api/movie/by/filtres"
     
     suspend fun getMovies(page: Int = 0, genreId: Int = 0, filterType: FilterType = FilterType.DEFAULT): List<Movie> {
         return withContext(Dispatchers.IO) {
