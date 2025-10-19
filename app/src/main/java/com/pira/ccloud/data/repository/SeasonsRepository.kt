@@ -12,7 +12,7 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 class SeasonsRepository : BaseRepository() {
-    private val BASE_URL = "https://hostinnegar.com/api/season/by/serie"
+    private val BASE_URL = "https://server-hi-speed-iran.info/api/season/by/serie"
     
     suspend fun getSeasons(seriesId: Int): List<Season> {
         return withContext(Dispatchers.IO) {
